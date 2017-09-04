@@ -1,0 +1,259 @@
+\documentclass[11pt,twoside,a4paper]{book}
+\usepackage[shorthands=off,english]{babel} % package for multilingual support
+
+\RequirePackage{iftex}
+\ifPDFTeX
+    \usepackage[utf8]{inputenc} 
+    \usepackage[T1]{fontenc}
+    % \usepackage{lmodern}
+\else
+    \RequirePackage{fontspec} % UFT8 fonts for LuaLaTeX
+    % \setmainfont{Latin Modern Roman}
+\fi
+\usepackage{csquotes}
+
+\usepackage[ backend=biber
+           , style=alphabetic % numeric
+           , sortlocale=en_US
+           , bibencoding=UTF8
+           , maxnames=100
+           ]{biblatex}
+\DeclareSourcemap{
+    \maps[datatype=bibtex, overwrite]{
+        \map{
+            \step[fieldset=editor, null]
+            \step[fieldset=language, null]
+        }
+    }
+}
+
+\usepackage{xcolor}
+\definecolor{dark-red}{rgb}{0.6,0.15,0.15}
+\definecolor{dark-green}{rgb}{0.15,0.4,0.15}
+\definecolor{medium-blue}{rgb}{0,0,0.5}
+\usepackage[ pdfauthor={Martina Vitovska}
+           , pdftitle={Instrumentation of LLVM IR},
+           , pdfsubject={Master's Thesis},
+           , plainpages=false
+           , pdfpagelabels
+           , unicode
+           , draft=false
+           , colorlinks=true
+           , linkcolor={dark-red}
+           , citecolor={dark-green}
+           , urlcolor={medium-blue}
+           , unicode=true
+           ]{hyperref}
+
+\usepackage{amssymb,amsmath}
+\usepackage{verbatim}
+\usepackage[final]{listings}
+\lstset{ language=C++ }
+\usepackage{paralist}
+% use upquote for straight quotes in verbatim environments
+\usepackage{upquote}
+
+\usepackage{xspace}
+\usepackage{pgf}
+\usepackage{tikz}
+\usetikzlibrary{arrows,positioning}
+\usepackage{pdfpages}
+
+\usepackage{float}
+\makeatletter
+% custom float style, derived from ruled
+% - caption is at the bottom
+% - spaces before and after figure are larger
+% - rules are thinner
+% - bottom rule is missing
+\newcommand\floatc@botruled[2]{{\@fs@cfont #1} #2\par}
+\newcommand\fs@botruled{\def\@fs@cfont{\bfseries}\let\@fs@capt\floatc@botruled
+    \def\@fs@pre{\hrule\kern0.5\abovecaptionskip}%
+    \def\@fs@post{}%
+    \def\@fs@mid{\kern0.5\abovecaptionskip\hrule\kern0.5\abovecaptionskip}%
+\let\@fs@iftopcapt\iffalse}
+\makeatother
+\floatstyle{botruled}
+\restylefloat{figure}
+% \restylefloat{table}
+\usepackage[labelfont=bf]{caption}
+\usepackage{subcaption}
+
+\usepackage{multirow}
+\usepackage{microtype}
+
+\usepackage{tabularx}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\usepackage{arydshln}
+\newcommand{\dg}{\textsuperscript{\dag}}
+
+\newcommand{\divine}{\mbox{\textsf{DIVINE}}\xspace}
+\newcommand{\lart}{\mbox{\textsf{LART}}\xspace}
+
+\newcommand{\paradise}{ParaDiSe\xspace}
+\newcommand{\buchi}{Büchi\xspace}
+
+\newcommand{\spin}{\mbox{\textsc{Spin}}\xspace} 
+\newcommand{\ltsmin}{\mbox{LTSmin}\xspace}
+
+\newcommand{\llvm}{\textsf{LLVM}\xspace}
+\newcommand{\ltl}{LTL\xspace}
+\newcommand{\complexity}[1]{\textsc{#1}\xspace}
+\newcommand{\PSPACE}{\complexity{PSPACE}}
+
+\newcommand{\darcs}{Darcs\xspace}
+
+\newcommand{\tso}{TSO\xspace}
+\newcommand{\pso}{PSO\xspace}
+\newcommand{\xtso}{\texttt{x86}-TSO\xspace}
+
+\newcommand{\dorel}[1]{\ifmmode\mathbin{#1}\else${#1}$\fi}
+\newcommand{\rel}[1]{\dorel{\xrightarrow{\mathrm{#1}}}}
+\newcommand{\rellabel}[1]{\scriptsize\texttt{#1}}
+\newcommand{\drawrel}[4][left]{\draw[->] (#2) edge node[#1] {\rellabel{#4}} (#3)}
+\newcommand{\drawrelgray}[4][left]{\draw[->, gray] (#2) edge node[#1] {\color{gray}\rellabel{#4}} (#3)}
+\newcommand{\loc}[1]{\ensuremath{\mathrm{loc}\left(#1\right)}}
+
+\newcommand{\FI}{Faculty of Informatics}
+\newcommand{\MU}{Masaryk University}
+
+\newcommand{\thesistitle}{Instrumentation of LLVM IR} % enter thesis title
+\newcommand{\thesissubtitle}{Master's Thesis}
+\newcommand{\thesisauthor}{Martina Vitovská}
+\newcommand{\thesisYearCity}{Brno, 2017}
+\newcommand{\thesisadvisor}{Jan Strejček}
+
+\newcommand{\note}{\textit{Note:}\xspace}
+
+\addbibresource{thesis.bib}
+
+\usepackage[pass]{geometry}
+\usepackage{setspace}
+% \addtolength\textwidth{5pt} % about 129mm
+% \addtolength\oddsidemargin{1cm}
+% \addtolength\evensidemargin{-1cm}
+
+\usepackage{enumitem}
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}%
+  \setlength{\parskip}{0pt}%
+  \setlength{\topsep}{0pt}%
+  \setlength{\partopsep}{0pt}}
+
+% \newcommand{\TODO}[1]{\textbf{\color{red}#1}}
+\renewcommand{\comment}[1]{\xspace}
+
+% autoref names
+\addto\extrasenglish{
+    \renewcommand{\chapterautorefname}{Chapter}
+    \renewcommand{\sectionautorefname}{Section}
+    \renewcommand{\subsectionautorefname}{Section}
+}
+
+\newcommand{\rot}[1]{\rotatebox{90}{#1\hspace*{0.5em}}}
+
+% LUA magic
+
+% \directlua{dofile("thesis.lua")}
+
+% \newcommand{\mem}[1]{\directlua{tex.sprint(mem(#1))}}
+% \newcommand{\dmem}[1]{\mem{#1 * 1024}}
+% \newcommand{\si}[1]{\directlua{tex.sprint(si(#1))}}
+% \newcommand{\speedup}[2]{\directlua{tex.sprint(speedup(#1, #2))}}
+
+\newcommand{\antispaceatend}{\vspace*{-\topsep}}
+
+% \setlength{\overfullrule}{5pt} % TODO: remove
+
+% try to avoid overfull lines, taken from \sloppy, but without allowing greater
+% tolerance for paragraphs without any problems
+% \emergencystretch 3em
+
+\usepackage{adjustbox}
+\newenvironment{threads}[1]
+    {\def\threadwidth{\textwidth / #1}\global\def\threadnext{}}
+    {}
+\newenvironment{thread}
+    {\threadnext\begin{adjustbox}{valign=t,minipage={0.95\threadwidth}}}
+    {\end{adjustbox}\global\def\threadnext{\hfill}}
+\newenvironment{stretched}{\emergencystretch 3em}{}
+
+\setcounter{tocdepth}{1}
+
+\usepackage{pdfpages}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{document}
+
+% initial pages from Mornfall + modifications
+
+\frontmatter
+ 
+\begin{titlepage}
+\newgeometry{margin=4cm}
+\begin{center}
+    {\Large \sc \FI, \MU}
+    \vskip4em
+    \includegraphics[width = 4cm, height = 4cm] {logo_fi.pdf}
+    \vskip4em
+    {\begin{spacing}{1}
+        \Huge \bf \thesistitle
+    \end{spacing}}
+    \vskip2em
+    {\Large \sc \thesissubtitle}
+    \vskip4em
+    {\LARGE \bf \thesisauthor}
+    \vfill
+\end{center}
+\textbf{Supervisor:}\\
+\thesisadvisor \hfill \thesisYearCity
+\end{titlepage}
+ 
+\cleardoublepage
+
+\section*{Abstract}
+%\input{abstract}
+
+\section*{Keywords}
+software verification, program transformation, LLVM, C, Symbiotic
+
+\cleardoublepage
+% \clearpage
+\thispagestyle{empty}
+
+\pagestyle{headings}
+\tableofcontents % prints table of contents
+\mainmatter
+
+\chapter{Introduction}\label{chap:introduction}
+%\input{intro}
+
+\appendix
+
+\chapter*{Bibliography}
+%\addcontentsline{toc}{chapter}{Bibliography}
+%\markboth{}{} % avoid headers from last chapter in bibliography
+
+%{
+%    \emergencystretch 3em % there is little other fixing possible for bibio
+%    \printbibliography[heading=none]
+%}
+
+\chapter{Publications}\label{chap:publications}
+%\input{publications}
+
+\end{document}
+
