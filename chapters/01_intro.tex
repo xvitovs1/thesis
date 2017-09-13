@@ -1,18 +1,23 @@
 As our lives became highly dependent on computers the question of software
 reliability turned to be a serious issue. If we take into consideration the
 size and the complexity of today computer programs it is almost impossible to
-find bugs in a code manually. The need for an automatic software analysis is
+find bugs in a code manually. The need for automatic program analysis is
 therefore increasing.
 
-TODO describe static analysis? what about the other one? techniques used for
-static analysis
+\textcolor{red}{TODO describe static analysis? what about the other one?
+techniques used for static analysis}
 
-Something about instrumentation The instrumentation is a technique that inserts
-a new code into an existing code. The new code usually does not change
-behaviour of the program but helps us to analyze it. Instrumentation is for
-example used in profilers which insert instructions for gathering information
-about time or memory consumption. Another example?
+One of the techniques used for program analysis is instrumentation.
+Instrumenting a program means inserting a new code into an existing code in
+order to gather information relevant for program analysis. The new code usually
+does not change the behaviour of the program. Instrumentation is for example
+used in profilers which insert instructions for gathering information about
+time or memory consumption. \textcolor{red}{Another example?}
 
-The aim
+The aim of this thesis is to present an overview of existing tools for
+instrumentation of LLVM IR bitcode and to desing a new tool for LLVM IR
+instrumentation. The tool should be configurable and should offer the
+possibility to use results of external static analyses to reduce the amount of
+newly inserted code. \textcolor{red}{Mention other goals?} 
 
-Chapters descriptions
+\textcolor{red}{Chapters descriptions}
