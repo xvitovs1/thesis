@@ -1,0 +1,53 @@
+\section{LLVMPin Instrumentation Framework}
+
+\url{http://eces.colorado.edu/~blomsted/llvmpin/llvmpin.html}
+\medskip
+
+LLVMPin is a framework that simplifies implementing tools for LLVM IR
+instrumentation. The framework basically consists of two scripts:
+
+\begin{itemize}
+    \item \texttt{llvmpin-gen} runs the LLVMPin tool implemented by
+          user and instruments a given code, 
+    \item \texttt{llvmpin} generates a new
+	  bitcode after instrumentation and from the bitcode it produces an
+          executable.
+\end{itemize}
+
+The user has to provide a LLVMPin tool, which is a C++ code that must contain three
+parts:
+
+\begin{itemize}
+    \item \texttt{REQUIRE} routine with a list of existing LLVM
+          passes\footnote{\url{http://llvm.org/docs/WritingAnLLVMPass.html}} required by
+          the LLVMPin tool,
+    \item \texttt{INSTRUMENT} routine that inserts calls to analysis functions
+          defined by user,
+    \item analysis part that contains definitions of analysis functions and a
+          routine for analysis setup.
+\end{itemize}
+
+The tool can use the LLVMPin API that currently offers some basic functions and
+arguments, for example...
+
+\textcolor{red}{TODO}
+
+Although the LLVMPin framework is one of the tools for instrumentation that are
+general and configurable, it does not simplify the work for the user in terms
+of writing a code that controls the instrumentation process.
+
+\section{LLVM-IR-MemProtect}
+
+\url{https://github.com/toaarnio/llvm-ir-memprotect}
+
+\section{LLVM IR Trace Profiler}
+
+\url{https://github.com/ysshao/LLVM-Tracer#llvm-ir-trace-profiler-llvm-triacer-12}
+
+\section{LLVM Instrumentation Pass}
+
+\url{https://github.com/imdea-software/LLVM_Instrumentation_Pass}
+
+\section{Other tools}
+
+Tools that use instrumentation: \url{https://github.com/google/sanitizers}
