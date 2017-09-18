@@ -1,1 +1,30 @@
-TODO
+\url{www.aosabook.org/en/llvm.html}
+\medskip
+
+LLVM is an open source project that provides compiler technologies designed to
+be independent of target architecture. It uses LLVM IR as an intermediate
+representation code. It can be used in three different forms: human readable
+representation, bitcode representation and an in-memory compiler IR. From this
+point we will take only the human readable form into consideration.
+
+\section{LLVM IR structure} %TODO rename the chapter to LLVM IR?
+
+LLVM IR is in SSA form (static single assignment form), which means that each
+variable can be assigned only once and must be defined before its use. It uses
+global identifiers that begin with the '@' character for functions and global
+variables and local identifiers that begin with the '\%' character for register
+names and types. Both kinds of identifiers can be named or unnamed, unnamed
+identifiers are represented as an unsigned numeric values. 
+
+\textcolor{red}{TODO example?}
+
+The high-level structure of an LLVM IR program consists of modules, which are
+units \textcolor{red}{TODO}. Modules are composed of global variables and
+functions.
+
+\section{LLVM IR types}
+
+LLVM IR is a strongly typed language.
+
+\section{Basic instructions}
+
