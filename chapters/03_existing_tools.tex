@@ -3,7 +3,7 @@
 \url{http://eces.colorado.edu/~blomsted/llvmpin/llvmpin.html}
 \medskip
 
-LLVMPin is a framework that simplifies implementing tools for LLVM IR
+LLVMPin is a framework that simplifies implementing tools for LLVM~IR
 instrumentation. The framework basically consists of two scripts:
 
 \begin{itemize}
@@ -14,7 +14,7 @@ instrumentation. The framework basically consists of two scripts:
           executable.
 \end{itemize}
 
-The user has to provide a LLVMPin tool, which is a C++ code that must contain three
+The user has to implement a LLVMPin tool, which is a C++ code that must contain three
 parts:
 
 \begin{itemize}
@@ -27,14 +27,13 @@ parts:
           routine for analysis setup.
 \end{itemize}
 
-The tool can use the LLVMPin API that currently offers some basic functions and
-arguments, for example...
-
-\textcolor{red}{TODO}
-
-Although the LLVMPin framework is one of the tools for instrumentation that are
+Although the LLVMPin framework is one of the instrumentation tools that are
 general and configurable, it does not simplify the work for the user in terms
-of writing a code that controls the instrumentation process.
+of writing a code that performs the core of the instrumentation process.
+However, the framework provides the user with API that adds several functions
+and macros that are useful for the instrumentation. For example, one of the
+basic functions provided by the API is a function \texttt{INS\_InsertCall} that
+adds a call to an analysis function.
 
 \section{LLVM-IR-MemProtect}
 
@@ -46,8 +45,23 @@ of writing a code that controls the instrumentation process.
 
 \section{LLVM Instrumentation Pass}
 
-\url{https://github.com/imdea-software/LLVM_Instrumentation_Pass}
+\url{https://github.com/imdea-software/LLVM\_Instrumentation\_Pass}
 
-\section{Other tools}
+\section{Clang Sanitizers}
 
-Tools that use instrumentation: \url{https://github.com/google/sanitizers}
+\url{https://clang.llvm.org/docs/UsersManual.html#id34}
+\medskip
+
+Clang compiler provides several sanitizers that use instrumentation to insert runtime checks for various errors and undefined behaviour.
+
+Disadvantage: runtime checks?
+
+\bigskip
+
+\url{https://clang.llvm.org/docs/AddressSanitizer.html}
+
+\url{http://btorpey.github.io/blog/2015/04/27/static-analysis-with-clang/}
+\medskip
+
+\subsection{AddressSanitizer}
+AddressSanitizer is a tool for detecting memory errors.

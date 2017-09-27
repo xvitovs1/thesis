@@ -2,7 +2,7 @@
 \medskip
 
 LLVM is an open source project that provides compiler technologies designed to
-be independent of target architecture. It uses LLVM IR as an intermediate
+be independent of a target architecture. It uses LLVM IR as an intermediate
 representation code. It can be used in three different forms: human readable
 representation, bitcode representation and an in-memory compiler IR. From this
 point we will take only the human readable form into consideration.
@@ -10,17 +10,29 @@ point we will take only the human readable form into consideration.
 \section{LLVM IR structure} %TODO rename the chapter to LLVM IR?
 
 LLVM IR is in SSA form (static single assignment form), which means that each
-variable can be assigned only once and must be defined before its use. It uses
-global identifiers that begin with the '@' character for functions and global
-variables and local identifiers that begin with the '\%' character for register
-names and types. Both kinds of identifiers can be named or unnamed, unnamed
-identifiers are represented as an unsigned numeric values. 
+variable can be assigned only once and must be defined before its use. It uses:
 
-\textcolor{red}{TODO example?}
+\begin{itemize}
+    \item global identifiers that begin with the '@' character for functions
+and global variables and
+    \item local identifiers that begin with the '\%' character for register
+names and types, for example local variable $b$.
+\end{itemize}
+
+Both kinds of identifiers can be named or unnamed, unnamed identifiers are
+represented as an unsigned numeric values. 
 
 The high-level structure of an LLVM IR program consists of modules, which are
-units \textcolor{red}{TODO}. Modules are composed of global variables and
-functions.
+units created when a program is translated. More modules can be linked together
+with the LLVM linker. Modules contain global variables and functions.
+
+Each function begins with a \texttt{define} keyword and is composed of basic
+blocks. Basic blocks are sequences of instructions and have a single entry node
+and a single exit node, i.e. there is no branching in a basic block. They form
+a control flow graph for a function. 
+
+
+\textcolor{red}{TODO example of a module with description}
 
 \section{LLVM IR types}
 
