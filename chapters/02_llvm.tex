@@ -20,17 +20,16 @@ names and types, for example local variable $b$.
 \end{itemize}
 
 Both kinds of identifiers can be named or unnamed, unnamed identifiers are
-represented as an unsigned numeric values. 
+represented as unsigned numeric values. 
 
 The high-level structure of an LLVM IR program consists of modules, which are
 units created when a program is translated. More modules can be linked together
-with the LLVM linker. Modules contain global variables and functions.
+with the LLVM linker. These units contain global variables and functions.
 
 Each function begins with a \texttt{define} keyword and is composed of basic
 blocks. Basic blocks are sequences of instructions and have a single entry node
 and a single exit node, i.e. there is no branching in a basic block. They form
 a control flow graph for a function. 
-
 
 \textcolor{red}{TODO example of a module with description}
 
@@ -40,3 +39,42 @@ LLVM IR is a strongly typed language.
 
 \section{Basic instructions}
 
+There are fice classes of LLVM instructions:
+
+\begin{enumerate}
+ \item terminator instructions,
+ \item binary instructions,
+ \item bitwise binary instructions,
+ \item memory instructions and
+ \item other instructions.
+\end{enumerate}
+
+A terminator instruction is used as the last instruction of each basic block
+and it determines which block will follow after the current one. For our
+purposes we will describe only two of the terminator instructions: \texttt(ret)
+and \texttt{br}.
+
+\texttt{ret} instruction is used to return from a function to a basic block
+from which the function was called. It has one optional argument that represent
+a return value of a function. The syntax of the \texttt{ret} instruction is
+following:
+
+\medskip
+\noindent \texttt{ret <type> <value>} 
+
+\noindent \texttt{ret void}
+\medskip
+
+\texttt{br} instruction determines which basic block from the current function
+will follow. It represents either conditional branching \texttt{br i1
+<condition>, label <true-branch>, label <false-branch>} transfering the control
+flow to \texttt{true-branch} block if the \texttt{condition} holds and to
+\texttt{false-branch} block otherwise, or uncoditional branching \texttt{br
+label <b>} transfering the control flow to a block \texttt{b} unconditionally.
+
+Binary operator instructions have two operands of the same type and return a
+result of an operation on these operands. \textcolor{red}{TODO}
+
+Bitwise binary instructions \textcolor{red}{TODO}
+
+Memory instruction \textcolor{red}{TODO}.
