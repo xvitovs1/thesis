@@ -84,6 +84,15 @@ for addition or \texttt{sub} instruction for subtraction. There are usually two
     versions of these instructions: one for integer values and one for floating
     point values.
 
-Bitwise binary instructions \textcolor{red}{TODO}
+Bitwise binary instructions are used for bitwise operations and are not
+relevant for this work.
 
-Memory instruction \textcolor{red}{TODO}.
+The two most important instructions for working with memory are \texttt{load}
+and \texttt{store}. \texttt{load} instruction is used to read from memory
+specified by its operand, whether \texttt{store} is used to write to memory and
+has two operands: a value to store and address of a target memory. Another
+instruction relevant for our work is \texttt{alloca} instruction for allocating
+memory on the stack.
+
+Relevant instruction from the category of other instructions is \texttt{call}
+which calls a function given as its operand together with function's arguments.
