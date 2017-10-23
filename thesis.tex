@@ -3,7 +3,7 @@
 
 \RequirePackage{iftex}
 \ifPDFTeX
-    \usepackage[utf8]{inputenc} 
+    \usepackage[utf8]{inputenc}
     \usepackage[T1]{fontenc}
     % \usepackage{lmodern}
 \else
@@ -93,13 +93,11 @@
 \newcommand{\paradise}{ParaDiSe\xspace}
 \newcommand{\buchi}{Büchi\xspace}
 
-\newcommand{\spin}{\mbox{\textsc{Spin}}\xspace} 
+\newcommand{\spin}{\mbox{\textsc{Spin}}\xspace}
 \newcommand{\ltsmin}{\mbox{LTSmin}\xspace}
 
 \newcommand{\llvm}{\textsf{LLVM}\xspace}
-\newcommand{\ltl}{LTL\xspace}
 \newcommand{\complexity}[1]{\textsc{#1}\xspace}
-\newcommand{\PSPACE}{\complexity{PSPACE}}
 
 \newcommand{\darcs}{Darcs\xspace}
 
@@ -246,6 +244,12 @@ software verification, program transformation, LLVM, C, Symbiotic
 
 \chapter{Overview of Existing Tools}\label{chap:tools}
 \input{chapters/03_existing_tools}
+
+\chapter{Instrumentation Framework}\label{chap:instr}
+\input{chapters/04_instr.tex}
+
+\chapter{Memory Safety Instrumentation}\label{chap:memsafety}
+\input{chapters/05_memsafety.tex}
 
 \appendix
 
