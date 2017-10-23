@@ -1,0 +1,75 @@
+\textcolor{red}{TODO describe how it works + plugins}
+
+The basic idea of our instrumentation tool is simple. Since it is required to
+be configurable, it needs to be supplied with two files: a JSON file with
+instrumentation rules and a file with definitons of instrumentation functions.
+The tool then goes through all instructions of all functions of a given LLVM
+code and if it finds a sequence of instructions that match some rule from the
+JSON file, it inserts a call to the corresponding function.
+
+\section{Plugins}
+The instrumentation can be extended with so-called plugins, which enables us to
+use results of some static analyses during the instrumentation. Path to these
+plugins can be specified in a JSON configuration file.
+
+\section{Configuration}
+The JSON file contains following fields:
+
+\medskip
+\begin{itemize}
+\item \texttt{file:} Path to a a file with definitions of instrumentation functions
+\item \texttt{analyses:} List of paths to analyses plugins
+\item \texttt{flags:} List of flags that can be set during instrumentation
+\item \texttt{globalVariablesRule:} Rules for instrumenting global
+  variables \textcolor{red}{TODO}
+\item \texttt{phases:} List of phases. Each phase contains a
+  list of \texttt{instructionRules}. Each rule is described with several fields:
+  \begin{itemize}
+  	\item \texttt{findInstructions}: Sequence of instructions we are searching
+	  for. For each instruction in the sequence, we need to fill in an
+      \texttt{instruction} field, that specifies a name of the instruction,
+      \texttt{returnValue} that enables to remember the return value of the
+      instruction in a given variable (can be set to "*" if the return value is not
+      needed), and \texttt{operands} that enables either to match the operands or to
+      remember the operand values in given variables (see example
+      \ref{code:config_example}).
+    \item \texttt{newIstruction:} Instruction that is to be inserted
+    \item \texttt{in:} Name of a function, in which this rule should be
+      applied. Can be set to a value "*" meaning that it should be used in all functions.
+    \item \texttt{where:} Specifies the location of insertion. It can be:
+      \texttt{before} or \texttt{after} the found sequence of instructions,
+      \texttt{entry} (at the entry point of the given function, \texttt{in}
+      cannot be set to "*" in this case) or \texttt{return} (before every
+      terminator instruction of the given function, \texttt{in} cannot be set to
+      "*" in this case).
+    \item \texttt{setFlags:} List of pairs \texttt{<flag, value>} that sets
+      all \texttt{flags} to a corresponding \texttt{value} if the rule was
+      applied. This field is optional.
+  \end{itemize}
+\end{itemize}
+\medskip
+
+\lstset{
+    string=[s]{"}{"},
+    stringstyle=\color{blue},
+    comment=[l]{:},
+    commentstyle=\color{black},
+}
+\begin{lstlisting}
+{
+  "file": "find_free.c",
+  "analyses": ["example_plugin.so"],
+  "flags": [""],
+  "globalVariablesRule":
+  "phases": [
+    {
+      "instructionRules": [
+      ]
+    },
+    {
+      "instructionRules": [
+      ]
+    }
+  ]
+}
+\end{lstlisting}
