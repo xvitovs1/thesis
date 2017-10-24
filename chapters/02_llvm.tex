@@ -5,22 +5,18 @@ LLVM is an open source project that provides compiler technologies designed to
 be independent of a target architecture. It uses LLVM IR as an intermediate
 representation code. It can be used in three different forms: human readable
 representation, bitcode representation and an in-memory compiler IR. From this
-point we will take only the human readable form into consideration.
+point we will take only the human readable form into consideration for the sake
+of simplicity.
 
-\section{LLVM IR structure} %TODO rename the chapter to LLVM IR?
+\begin{figure}[h]
+ \lstinputlisting{examples/llvm.ll}
+ \caption{Example of an LLVM module with function \texttt{main} that calls
+ \texttt{foo} function which allocates an array of ten integers and stores
+ \texttt{number} in the first field of the array.}
+ \label{fig:llvm_example}
+\end{figure}
 
-LLVM IR is in SSA form (static single assignment form), which means that each
-variable can be assigned only once and must be defined before its use. It uses:
-
-\begin{itemize}
-    \item global identifiers that begin with the '@' character for functions
-and global variables and
-    \item local identifiers that begin with the '\%' character for register
-names and types, for example local variable $b$.
-\end{itemize}
-
-Both kinds of identifiers can be named or unnamed, unnamed identifiers are
-represented as unsigned numeric values. 
+\section{LLVM structure} %TODO rename the chapter to LLVM IR?
 
 The high-level structure of an LLVM IR program consists of modules, which are
 units created when a program is translated. More modules can be linked together
@@ -29,11 +25,27 @@ with the LLVM linker. These units contain global variables and functions.
 Each function begins with a \texttt{define} keyword and is composed of basic
 blocks. Basic blocks are sequences of instructions and have a single entry node
 and a single exit node, i.e. there is no branching in a basic block. They form
-a control flow graph for a function. 
+a control flow graph for a function. In figure~\ref{fig:llvm_example} we give
+an example of an LLVM module with two function definitions, each containing one
+basic block.
 
-\textcolor{red}{TODO example of a module with description}
+LLVM IR is in SSA form (static single assignment form), which means that each
+variable can be assigned only once and must be defined before its use. It uses:
 
-\section{LLVM IR types}
+\begin{itemize}
+    \item global identifiers that begin with the '@' character for functions
+    and global variables, for example global variable \texttt{@number} in
+    figure~\ref{fig:llvm_example}, and
+    \item local identifiers that begin with the '\%' character for register
+    names and types, for example a local variable \texttt{\%a} in
+    figure~\ref{fig:llvm_example}.
+\end{itemize}
+
+Both kinds of identifiers can be named or unnamed, unnamed identifiers are
+represented as unsigned numeric values (e.g. local identifier \texttt{\%1} in
+figure~\ref{fig:llvm_example}).
+
+\section{LLVM types}
 
 LLVM IR is a strongly typed language, i.e. all values and variables are typed.
 There are simple types such as integer type (e.g. \texttt{i32} for a 32-bit
@@ -41,19 +53,16 @@ integer), floating point types (e.g. \texttt{float} or \texttt{double}) and
 pointer type (e.g. \texttt{i32*} for a pointer to a 32-bit integer), and also
 types for vectors (e.g. \texttt{<10 x i32>} for a vector of 10 32-bit
 integers), arrays (e.g. \texttt{[10 x i32]} for an array of 10 32-bit integers)
-and structures (e.g. \texttt{\{i32, i32\}} for a pair of 32-bit integers).
+and structures (e.g. \texttt{\{i32, i32\}} for a pair of 32-bit integers). For
+example, in figure~\ref{fig:llvm_example} we can see that global variable
+\texttt{number} is a 32-bit integer and \texttt{a} is an array of ten
+32-bit integers.
 
 \section{Basic instructions}
 
-There are five classes of LLVM instructions:
-
-\begin{enumerate}
- \item terminator instructions,
- \item binary instructions,
- \item bitwise binary instructions,
- \item memory instructions and
- \item other instructions.
-\end{enumerate}
+There are five classes of LLVM instructions: terminator instructions, binary
+instructions, bitwise binary instructions, memory instructions and other
+instructions.
 
 A terminator instruction is used as the last instruction of each basic block
 and it determines which block will follow after the current one. For our
@@ -62,14 +71,10 @@ and \texttt{br}.
 
 \texttt{ret} instruction is used to return from a function to a basic block
 from which the function was called. It has one optional argument that represent
-a return value of a function. The syntax of the \texttt{ret} instruction is
-following:
-
-\medskip
-\noindent \texttt{ret <type> <value>} 
-
-\noindent \texttt{ret void}
-\medskip
+a return value of a function. In figure~\ref{fig:llvm_example} we can see the
+two variants of this instruction: in function \texttt{foo}, there is a
+\texttt{ret void} instruction, because this function does not return any value,
+whereas function \texttt{main} returns 0 (\texttt{ret i32 0}).
 
 \texttt{br} instruction determines which basic block from the current function
 will follow. It represents either conditional branching \texttt{br i1
@@ -81,18 +86,27 @@ label <b>} transfering the control flow to a block \texttt{b} unconditionally.
 Binary operator instructions have two operands of the same type and return a
 result of an operation on these operands, for example \texttt{add} instruction
 for addition or \texttt{sub} instruction for subtraction. There are usually two
-    versions of these instructions: one for integer values and one for floating
-    point values.
-
-Bitwise binary instructions are used for bitwise operations and are not
-relevant for this work.
+versions of these instructions: one for integer values and one for floating
+point values. These instructions together with bitwise binary instructions
+that are used for bitwise operations are not relevant for this work.
 
 The two most important instructions for working with memory are \texttt{load}
 and \texttt{store}. \texttt{load} instruction is used to read from memory
 specified by its operand, whether \texttt{store} is used to write to memory and
-has two operands: a value to store and address of a target memory. Another
+has two operands: a value to store and address of a target memory. We can see
+the usage of \texttt{load} and \texttt{store} in figure~\ref{fig:llvm_example}
+in function \texttt{foo} where a value of global variable \texttt{number} is
+read, marked as \texttt{\%1} and later stored to \texttt{\%2}. Another
 instruction relevant for our work is \texttt{alloca} instruction for allocating
-memory on the stack.
+memory on the stack. In figure~\ref{fig:llvm_example}, in function \texttt{foo}
+\texttt{alloca} instruction is used to allocate \texttt{a} as an array of ten
+32-bit integers on the stack. Instruction \texttt{getelementptr} gets the
+address of some element of an aggregate data structure, for example in
+figure~\ref{fig:llvm_example} in function \texttt{foo} it gets the address of
+the fifth element of array \texttt{a}.
 
 Relevant instruction from the category of other instructions is \texttt{call}
 which calls a function given as its operand together with function's arguments.
+We can find an example of a \texttt{call} instruction in
+figure~\ref{fig:llvm_example} in function \texttt{main} which calls function
+\texttt{foo}.
