@@ -1,38 +1,84 @@
-\textcolor{red}{TODO describe how it works + plugins}
-
 The basic idea of our instrumentation tool is simple. Since it is required to
 be configurable, it needs to be supplied with two files: a JSON file with
 instrumentation rules and a file with definitons of instrumentation functions.
-The tool then goes through all instructions of all functions of a given LLVM
-code and if it finds a sequence of instructions that match some rule from the
-JSON file, it inserts a call to the corresponding function.
+The tool then loads a whole module from a given LLVM code and begins to process
+phases. In each phase it goes through all functions and it first applies rules for
+inserting instructions at their entry points and above their terminator
+instructions. Then it goes through instructions of the current function and it
+looks if they match with the sequences described in instrumentation rules. If a
+match is found, the current sequence of instructions is instrumented above or
+under according to the instrumentation rules. At the very end, a rule for
+global variables is applied.
 
 \section{Plugins}
-The instrumentation can be extended with so-called plugins, which enables us to
-use results of some static analyses during the instrumentation. Path to these
-plugins can be specified in a JSON configuration file.
+
+The instrumentation module can be extended by plugins that can reply to queries
+derived from conditions belonging to rules, which enables us to instrument
+conditionally. A condition is a conjunction of predicates over values from the
+program. Since static analyses provided by plugins are supposed to be
+over-approximating, the predicates are set to reason about possibilities (e.g.
+may the pointer be invalid?). Therefore answering true is a conservative answer
+if an analysis does not have enough information to refute the predicate. A rule
+is applied if all plugins answer that the given condition is satisfied. If at
+least one plugin says that the condition is not satisfied, the rule is not
+applied at the matched sequence and no instrumentation is performed.
+
+To define a list of possible conditions, all plugins have to implement the same
+interface.
+\textcolor{red}{describe interface and how it works}
 
 \section{Configuration}
+
+\lstset{
+    basicstyle=\footnotesize,
+    string=[s]{"}{"},
+    stringstyle=\color{blue},
+    comment=[l]{:},
+    commentstyle=\color{black},
+}
+
+\begin{figure}[h]
+\lstinputlisting{examples/json_example2.json}
+\caption{Example of an \texttt{globalVariablesRule} in a JSON configuration file.}
+\label{fig:json_example2}
+\end{figure}
+
+\begin{figure}[h]
+\lstinputlisting{examples/json_example.json}
+\caption{Example of an \texttt{instructionRule} in a JSON configuration file.}
+\label{fig:json_example}
+\end{figure}
+
 The JSON file contains following fields:
 
 \medskip
 \begin{itemize}
-\item \texttt{file:} Path to a a file with definitions of instrumentation functions
-\item \texttt{analyses:} List of paths to analyses plugins
-\item \texttt{flags:} List of flags that can be set during instrumentation
+\item \texttt{file:} Path to a a file with definitions of instrumentation functions.
+\item \texttt{analyses:} List of paths to analyses plugins.
+\item \texttt{flags:} List of flags that can be set during instrumentation.
 \item \texttt{globalVariablesRule:} Rules for instrumenting global
-  variables \textcolor{red}{TODO}
-\item \texttt{phases:} List of phases. Each phase contains a
+  variables. \textcolor{red}{TODO}
+\item \texttt{phases:} List of instrumentation phases. Each phase contains a
   list of \texttt{instructionRules}. Each rule is described with several fields:
   \begin{itemize}
-  	\item \texttt{findInstructions}: Sequence of instructions we are searching
-	  for. For each instruction in the sequence, we need to fill in an
-      \texttt{instruction} field, that specifies a name of the instruction,
-      \texttt{returnValue} that enables to remember the return value of the
-      instruction in a given variable (can be set to "*" if the return value is not
-      needed), and \texttt{operands} that enables either to match the operands or to
-      remember the operand values in given variables (see example
-      \ref{code:config_example}).
+    \item \texttt{findInstructions}: Sequence of instructions we are searching
+    for. For each instruction in the sequence, we need to fill in an
+        \texttt{instruction} field, that specifies a name of the instruction,
+        \texttt{returnValue} that enables to remember the return value of the
+        instruction in a given variable (can be set to "*" if the return value
+        is not needed), and \texttt{operands} that enables either to match the
+        operands or to remember the operand values in given variables. We can
+        also optionally fill in fields \texttt{getSizeTo} and
+        \texttt{getPointerInfoTo}. \texttt{getSizeTo} can be used only with
+        \texttt{load}, \texttt{store} or \texttt{alloca} instruction and it
+        stores size of the type of the value that is being loaded, stored or
+        allocated to the given variable. \texttt{getPointerInfoTo} can be used
+        only with \texttt{load} or \texttt{store} and it stores two values to
+        given variables (if possible): size of the allocated memory to which
+        the dereferenced pointer points to and corresponding \texttt{alloca}
+        instruction. Since we can get this information only from a pointer
+        analysis, this field can be used only when the analysis is available as
+        a plugin.
     \item \texttt{newIstruction:} Instruction that is to be inserted
     \item \texttt{in:} Name of a function, in which this rule should be
       applied. Can be set to a value "*" meaning that it should be used in all functions.
@@ -47,29 +93,19 @@ The JSON file contains following fields:
       applied. This field is optional.
   \end{itemize}
 \end{itemize}
-\medskip
 
-\lstset{
-    string=[s]{"}{"},
-    stringstyle=\color{blue},
-    comment=[l]{:},
-    commentstyle=\color{black},
-}
-\begin{lstlisting}
-{
-  "file": "find_free.c",
-  "analyses": ["example_plugin.so"],
-  "flags": [""],
-  "globalVariablesRule":
-  "phases": [
-    {
-      "instructionRules": [
-      ]
-    },
-    {
-      "instructionRules": [
-      ]
-    }
-  ]
-}
-\end{lstlisting}
+In figure~\ref{fig:json_example}, we can see an example of an
+\texttt{instructionRule}. In this case, everery time the tool comes across a
+\texttt{load} instruction in any function (\texttt{in} is set to "*"), the only
+operands of \texttt{load} is stored to a variable \texttt{<t1>}, size of the
+type that is being load is stored to a variable \texttt{<t2>} and condition
+\texttt{!isValidPointer} is checked. If the conditions holds, call of a
+function \texttt{\_\_INSTR\_check\_pointer} with arguments \texttt{<t1>} and
+\texttt{<t2>} is inserted before the current \texttt{load} instruction.
+
+The functions whose calls are instrumented into a code must be defined in a
+file specified by the \texttt{file} field in the JSON configuration. The names
+of the functions must have a prefix \texttt{\_\_INSTR\_}...
+\textcolor{red}{this is not true, but they are still left from the
+instrumentation}
+

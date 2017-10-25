@@ -1,0 +1,18 @@
+{
+  "findInstructions": [
+    {
+       "returnValue": "*" ,
+       "instruction": "load",
+       "operands": ["<t1>"],
+       "getSizeTo": "<t2>"
+    }
+  ],
+  "newInstruction": {
+     "returnValue": "*" ,
+     "instruction": "call" ,
+     "operands": ["<t1>", "<t2>", "__INSTR_check_pointer"]
+  },
+  "where": "before",
+  "conditions": [["!isValidPointer", "<t1>", "<t2>"]],
+  "in": "*"
+}

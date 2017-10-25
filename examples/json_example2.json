@@ -1,0 +1,13 @@
+"globalVariablesRule": {
+   "findGlobals": {
+      "globalVariable": "<t1>",
+      "getSizeTo": "<t2>"
+   },
+   "newInstruction": {
+      "returnValue": "*",
+      "instruction": "call",
+      "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
+   },
+   "in": "main",
+   "conditions": [["isRemembered", "<t1>"]]
+}
