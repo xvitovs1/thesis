@@ -8,11 +8,11 @@
     }
   ],
   "newInstruction": {
-     "returnValue": "*" ,
      "instruction": "call" ,
      "operands": ["<t1>", "<t2>", "__INSTR_check_pointer"]
   },
   "where": "before",
   "conditions": [["!isValidPointer", "<t1>", "<t2>"]],
-  "in": "*"
+  "in": "*",
+  "setFlags": [["loadPresent", "true"]]
 }
