@@ -77,6 +77,17 @@
   commentstyle    = \itshape\color{magenta}}
 \usepackage{floatrow} %% Putting captions above tables
 \floatsetup[table]{capposition=top}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows}
+\usepackage{smartdiagram}
+\usesmartdiagramlibrary{additions}
+
+\newcommand{\todo}[1]{\textcolor{red}{#1}}
+\newcommand{\llvm}{\textsc{llvm}\xspace}
+\newcommand{\symbiotic}{\textsc{Symbiotic}\xspace}
+\newcommand{\klee}{\textsc{Klee}\xspace}
+
 \begin{document}
 \chapter{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
