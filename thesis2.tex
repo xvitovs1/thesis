@@ -52,8 +52,8 @@
     advisor       = Jan Strejček,
     title         = {Instrumentation of LLVM IR},
     TeXtitle      = {Instrumentation of LLVM IR},
-    keywords      = {instrumentation, verification, static analysis ...},
-    TeXkeywords   = {instrumentation, verification, static analysis, \ldots},
+    keywords      = {instrumentation, verification, static analysis, LLVM, ...},
+    TeXkeywords   = {instrumentation, verification, static analysis, LLVM, \ldots},
     abstract      = {This is the abstract of my thesis, which can span multiple paragraphs.},
     thanks        = {These are the acknowledgements for my thesis, which can span multiple paragraphs.},
   %%  bib           = example.bib
@@ -82,11 +82,19 @@
 \usetikzlibrary{shapes,arrows}
 \usepackage{smartdiagram}
 \usesmartdiagramlibrary{additions}
+\usepackage{styles/llvm}
+\usepackage{styles/nasm}
+
+\usepackage{xspace}
 
 \newcommand{\todo}[1]{\textcolor{red}{#1}}
 \newcommand{\llvm}{\textsc{llvm}\xspace}
 \newcommand{\symbiotic}{\textsc{Symbiotic}\xspace}
 \newcommand{\klee}{\textsc{Klee}\xspace}
+\newcommand{\stacklist}{\texttt{stack\_list}\xspace}
+\newcommand{\globalslist}{\texttt{globals\_list}\xspace}
+\newcommand{\heaplist}{\texttt{heap\_list}\xspace}
+\newcommand{\dealloclist}{\texttt{deallocated\_list}\xspace}
 
 \begin{document}
 \chapter{Introduction}
@@ -100,16 +108,18 @@
 
 
 \chapter{LLVM}\label{chap:llvm}
-\input{chapters/02_llvm}
+\input{chapters/02_llvm.tex}
 
 \chapter{Overview of Existing Tools}\label{chap:tools}
-\input{chapters/03_existing_tools}
+\input{chapters/03_existing_tools.tex}
 
 \chapter{Configurable Instrumentation}\label{chap:instr}
 \input{chapters/04_instr.tex}
 
 \chapter{Memory Safety Instrumentation}\label{chap:memsafety}
 \input{chapters/05_memsafety.tex}
+
+\chapter{Evaluation}\label{chap:eval}
 
 \appendix %% Start the appendices.
 \chapter{An appendix}

@@ -9,7 +9,7 @@ point we will take only the human readable form into consideration for the sake
 of simplicity.
 
 \begin{figure}[h]
- \lstinputlisting{examples/llvm.ll}
+ \lstinputlisting[language=llvm,style=nasm]{examples/llvm.ll}
  \caption{Example of an LLVM module with function \texttt{main} that calls
  \texttt{foo} function which allocates an array of ten integers and stores
  \texttt{number} in the first field of the array.}
@@ -18,7 +18,7 @@ of simplicity.
 
 \section{LLVM structure} %TODO rename the chapter to LLVM IR?
 
-The high-level structure of an LLVM IR program consists of modules, which are
+The high-level structure of an LLVM program consists of modules, which are
 units created when a program is translated. More modules can be linked together
 with the LLVM linker. These units contain global variables and functions.
 
@@ -29,7 +29,7 @@ a control flow graph for a function. In figure~\ref{fig:llvm_example} we give
 an example of an LLVM module with two function definitions, each containing one
 basic block.
 
-LLVM IR is in SSA form (static single assignment form), which means that each
+LLVM is in SSA form (static single assignment form), which means that each
 variable can be assigned only once and must be defined before its use. It uses:
 
 \begin{itemize}
@@ -47,7 +47,7 @@ figure~\ref{fig:llvm_example}).
 
 \section{LLVM types}
 
-LLVM IR is a strongly typed language, i.e. all values and variables are typed.
+LLVM is a strongly typed language, i.e. all values and variables are typed.
 There are simple types such as integer type (e.g. \texttt{i32} for a 32-bit
 integer), floating point types (e.g. \texttt{float} or \texttt{double}) and
 pointer type (e.g. \texttt{i32*} for a pointer to a 32-bit integer), and also
@@ -109,4 +109,4 @@ Relevant instruction from the category of other instructions is \texttt{call}
 which calls a function given as its operand together with function's arguments.
 We can find an example of a \texttt{call} instruction in
 figure~\ref{fig:llvm_example} in function \texttt{main} which calls function
-\texttt{foo}.
+\texttt{foo} on line~15.
