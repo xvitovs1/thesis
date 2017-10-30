@@ -18,28 +18,31 @@
   \centering
   \begin{tikzpicture}[yscale=0.9, auto,
       block/.style = {
-        rectangle, draw=black, thick, text width=7em, text centered,
+        rectangle, draw=black, thick, text width=8em, text centered,
         rounded corners, minimum height=3em },
       block-sharp/.style = {
-          rectangle, draw, thick, text width=7em, text centered, minimum
+          rectangle, draw, thick, text width=8em, text centered, minimum
           height=3em },
       line/.style = { draw, thick, ->, >=stealth },
       line-dashed/.style = { draw, thick, ->, densely dotted, >=stealth }]
-    \node [block-sharp] (rules) at (-4.5, -2.25) {\textsf{Instrumentation\\ rules in JSON}};
+    \node [block-sharp] (rules) at (-4.5, -2.75) {\textsf{Instrumentation\\ rules in JSON}};
     \node [block-sharp] (cprogram) at (0, 2.25) {\textsf{Program in C}};
     \node [block-sharp] (llvmprogram) at (0, 0) {\textsf{Program in LLVM}};
-    \node [block] (instr) at (0, -2.25) {\textsf{Instrumentation}};
-    \node [block-sharp] (instrprogram) at (0, -4.5) {\textsf{Instrumented program}};
-    \node [block-sharp] (defs) at (4.5, -2.25) {\textsf{Definitions of
+	\node [rectangle split, draw, rectangle split parts=2, text
+    width=8em,rounded corners, text centered, fill=blue!30] (instr) at (0, -2.75)
+    {\textsf{\textbf{Instrumentation:}} \nodepart{second}
+    \parbox{3cm}{\textsf{1. phase \\ 2. phase \\ \vdots}}};
+    \node [block-sharp] (instrprogram) at (0, -5.5) {\textsf{Instrumented program}};
+    \node [block-sharp] (defs) at (4.5, -2.75) {\textsf{Definitions of
     instrumented functions in LLVM}};
     % connect all nodes defined above
     \draw[line] (cprogram) -> (llvmprogram);
-    \draw[line] (llvmprogram) -> (instr);
+    \draw[line-dashed] (llvmprogram) -> (instr);
     \draw[line] (instr) -> (instrprogram);
-    \draw[line] (rules) -> (instr);
-    \draw[line] (defs) -> (instr);
+    \draw[line-dashed] (rules) -> (instr);
+    \draw[line-dashed] (defs) -> (instr);
   \end{tikzpicture}
-  \caption{The scheme of Configurable Instrumentation.}
+  \caption{The scheme of configurable instrumentation.}
   \label{fig:scheme}
 \end{figure}
 
