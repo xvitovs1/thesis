@@ -4,20 +4,55 @@ size and the complexity of today computer programs it is almost impossible to
 find bugs in a code manually. The need for automatic program analysis is
 therefore increasing.
 
-\textcolor{red}{TODO describe static analysis? what about the other one?
-techniques used for static analysis}
+We can distiguish two types of program analysis: dynamic and static. Whereas
+dynamic analysis is performed by executing the program, static analysis
+inspects a representation of a program (e.g. a source code) and analyzes it
+without actually running it.
 
-One of the techniques used for program analysis is instrumentation.
-Instrumenting a program means inserting a new code into an existing code in
-order to gather information relevant for program analysis. The new code usually
-does not change the behaviour of the program. Instrumentation is for example
-used in profilers which insert instructions for gathering information about
-time or memory consumption. \textcolor{red}{Another example?}
+One of the techniques used for both dynamic and static program analysis is
+instrumentation. Instrumenting a program means inserting a new code into an
+existing code in order to gather information relevant for program analysis. The
+new code usually does not change the behaviour of the program. Instrumentation
+is for example used in profilers which insert instructions for gathering
+information about time or memory consumption. \todo{Another example?}
 
 The aim of this thesis is to present an overview of existing tools for
-instrumentation of LLVM IR bitcode and to desing a new tool for LLVM IR
+instrumentation of LLVM IR bitcode and to design a new tool for LLVM IR
 instrumentation. The tool should be configurable and should offer the
 possibility to use results of external static analyses to reduce the amount of
-newly inserted code. \textcolor{red}{Mention other goals?} 
+newly inserted code. Another goal is to create a configuration for finding
+memory safety errors such as double free, invalid dereference or
+use-free-error.
 
-\textcolor{red}{Chapters descriptions}
+The new tool is implemented to be self-standing, which means it can be
+incorporated in any tool that performs the actual analysis on instrumented
+program. We employed the instrumentation in \symbiotic which is an open-source
+tool for static analysis of sequential programs in LLVM. It uses three
+techniques for static analysis: instrumentation, program slicing and symbolic
+execution. Instrumentation in \symbiotic is used to reduce the problem of
+checking some property violations (e.g. checking for NULL pointer dereference)
+to a reachability problem. In other words, a given program is instrumented such
+that the original program violates the property if and only if some error
+location is reachable in the instrumented program. Program slicing is a
+technique that removes a code that is not relevant for the reachability of
+error locations, therefore the actual analysis is performed on a smaller amount
+of code and is consequently faster. The sliced program is passed to a symbolic
+executor that goes through every possible path of a program (if the program
+terminates) because it uses symbolic values of variables instead of the real
+values and looks whether some error location is reachable.
+
+
+Chapter~\ref{chap:tools} lists the existing tools for instrumenting LLVM IR and
+tools that use instrumentation of LLVM IR for verification of programs and
+discusses their benefits and drawbacks.
+
+In Chapter~\ref{chap:instr} the general approach of our configurable
+instrumentation is described together with the configuration files that must
+be provided.
+
+Chapter~\ref{chap:memsafety} deals with a configuration of instrumentation for
+checking memory safety errors.
+
+In chapter~\ref{chap:eval} we show evaluation of instrumentation designed
+for memory safety implemented in \symbiotic. We compare various enhancements on
+a set of benchmarks from SV-COMP.
