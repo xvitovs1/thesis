@@ -97,18 +97,6 @@ interface.
     commentstyle=\color{black},
 }
 
-\begin{figure}[h]
-\lstinputlisting{examples/json_example.json}
-\caption{Example of an \texttt{instructionRule} in a JSON configuration file.}
-\label{fig:json_example}
-\end{figure}
-
-\begin{figure}[h]
-\lstinputlisting{examples/json_example2.json}
-\caption{Example of an \texttt{globalVariablesRule} in a JSON configuration file.}
-\label{fig:json_example2}
-\end{figure}
-
 The JSON file contains following fields:
 
 \medskip
@@ -189,32 +177,23 @@ of the operand of \texttt{load} instruction and it can be used e.g. as an
 argument of the function call that is to be instrumented or as an argument of a
 condition.
 
-In figure~\ref{fig:json_example}, we can see an example of an
-\texttt{instructionRule}. In this case, every time the tool comes across a
-\texttt{load} instruction in any function (\texttt{in} is set to "*"), the only
-operands of \texttt{load} is stored to a variable \texttt{<t1>}, size of the
-type that is being load is stored to a variable \texttt{<t2>} and condition
-\texttt{!isValidPointer} is checked (i.e. a plugin's function
-\texttt{isValidPointer} is called with arguments \texttt{<t1>} and
-\texttt{<t2>}). If the condition holds, call of a function
-\texttt{\_\_INSTR\_check\_pointer} with arguments \texttt{<t1>} and
-\texttt{<t2>} is inserted \emph{before} the current \texttt{load} instruction.
-After a successful application of this rule, flag \texttt{loadPresent} is set
-to \emph{true}.
-
-An example of a \texttt{globalVariablesRule} can be found in
-figure~\ref{fig:json_example2}. The value of a global variable is stored to a
-variable \texttt{<t1>} and size of the type of the global variable is stored to
-a variable \texttt{<t2>}. A plugin is asked whether the given condition
-\texttt{isRemembered} with argument \texttt{<t1>} holds and if the answer is
-positive, new call of a function \texttt{\_\_INSTR\_remember\_global} with
-arguments \texttt{<t1>} and \texttt{<t2>} is inserted at the beginning of
-\emph{main}.
-
 The functions whose calls are instrumented into a code must be defined in a
 file specified by the \texttt{file} field in the JSON configuration. This file
 has to be compiled to LLVM and after a successful instrumentation, the
 definitions of functions must be linked to the instrumented module.
+
+\begin{figure}[h]
+\lstinputlisting{examples/json_example.json}
+\caption{Example of an \texttt{instructionRule} in a JSON configuration file.}
+\label{fig:json_example}
+\end{figure}
+
+\begin{figure}[h]
+\lstinputlisting{examples/json_example2.json}
+\caption{Example of an \texttt{globalVariablesRule} in a JSON configuration file.}
+\label{fig:json_example2}
+\end{figure}
+
 
 \section{Applying Rules}
 
@@ -263,3 +242,26 @@ satisfied.
 
 \todo{reachable functions?}
 \todo{describe cloning metadata?}
+
+In figure~\ref{fig:json_example}, we can see an example of an
+\texttt{instructionRule}. In this case, every time the tool comes across a
+\texttt{load} instruction in any function (\texttt{in} is set to "*"), the only
+operands of \texttt{load} is stored to a variable \texttt{<t1>}, size of the
+type that is being load is stored to a variable \texttt{<t2>} and condition
+\texttt{!isValidPointer} is checked (i.e. a plugin's function
+\texttt{isValidPointer} is called with arguments \texttt{<t1>} and
+\texttt{<t2>}). If the condition holds, call of a function
+\texttt{\_\_INSTR\_check\_pointer} with arguments \texttt{<t1>} and
+\texttt{<t2>} is inserted \emph{before} the current \texttt{load} instruction.
+After a successful application of this rule, flag \texttt{loadPresent} is set
+to \emph{true}.
+
+An example of a \texttt{globalVariablesRule} can be found in
+figure~\ref{fig:json_example2}. The value of a global variable is stored to a
+variable \texttt{<t1>} and size of the type of the global variable is stored to
+a variable \texttt{<t2>}. A plugin is asked whether the given condition
+\texttt{isRemembered} with argument \texttt{<t1>} holds and if the answer is
+positive, new call of a function \texttt{\_\_INSTR\_remember\_global} with
+arguments \texttt{<t1>} and \texttt{<t2>} is inserted at the beginning of
+\emph{main}.
+
