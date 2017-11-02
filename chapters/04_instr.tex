@@ -32,7 +32,7 @@
     width=8em,rounded corners, text centered, fill=blue!30] (instr) at (0, -2.75)
     {\textsf{\textbf{Instrumentation:}} \nodepart{second}
     \parbox{3cm}{\textsf{1. phase \\ 2. phase \\ \vdots}}};
-    \node [block-sharp] (instrprogram) at (0, -5.5) {\textsf{Instrumented program}};
+    \node [block-sharp] (instrprogram) at (0, -5.5) {\textsf{Instrumented program in LLVM}};
     \node [block-sharp] (defs) at (4.5, -2.75) {\textsf{Definitions of
     instrumented functions in LLVM}};
     % connect all nodes defined above
@@ -47,29 +47,26 @@
 \end{figure}
 
 The basic idea of our instrumentation tool is depicted in
-figure~\ref{fig:scheme}. Since it works on LLVM, a program in C that is
-supposed to be instrumented has to be translated. Instrumentation is required
-to be configurable, therefore it needs to be supplied with two files: a file
-with definitons of instrumentation functions whose calls will be inserted into
-the code and a JSON file with instrumentation rules. The rules define how
-sequences of LLVM instructions should be instrumented with calls of
-instrumentation functions. The tool first loads a whole module from a given
-LLVM code and begins to process it. In each phase it goes through all functions
-and it first applies rules for inserting instructions at their entry points and
-above their terminator instructions. Then it goes through instructions of the
-current function and it looks if they match with the sequences described in
-instrumentation rules. If a match is found, the current sequence of
-instructions is instrumented above or under according to the instrumentation
-rules. At the very end, a rule for global variables is applied. The result of
-the instrumentation process is again an LLVM program.
+figure~\ref{fig:scheme}. Since it works on the top of LLVM, a program in C that
+is supposed to be instrumented has to be translated. Instrumentation is
+required to be configurable, therefore it needs to be supplied with two files:
+a~file with definitons of instrumentation functions whose calls will be
+inserted into the code and a JSON file with instrumentation rules. The rules
+define how sequences of LLVM instructions should be instrumented with calls of
+instrumentation functions. The tool first loads a~whole module from a given
+LLVM code and begins to process it. In each phase it goes through all
+instructions and it looks if they match any instrumentation rule. If a match is
+found, the rule is applied (i.e.~a~new code is inserted according to the rule).
+The result of the instrumentation process is again an LLVM program.
 
-\section{Conditions}\label{sec:conditions}
+
+\section{Conditions and Flags}\label{sec:conditions}
 
 To enable conditional instrumentation, the rules can contain conditions. A
 condition is a conjunction of predicates over values from the program.
-\todo{describe later when we solve the issue with condition system}
+\todo{describe later when we solve the issuie with condition system}
+\todo{describe problem of the first implementation}
 
-\section{Flags}
 In order to pass some information between phases, flags can be defined in a
 JSON file with instrumentation rules. When inserting a call to a function, it
 is possible to set a flag and in a later phase condition some rule by a check
@@ -143,7 +140,10 @@ The JSON file contains following fields:
     \item \texttt{newIstruction:} Instruction that is to be inserted. It
     contains two mandatory fields: \texttt{instruction} that specifies a name
     of the new instruction (for now, only \texttt{call} instruction is
-    supported), and \texttt{operands} of the instruction.
+    supported), and \texttt{operands} of the instruction. Moreover, it is
+    possible to add one optional field \texttt{stripInBoundsOffsets} that
+    strips off pointer casts from a given pointer (i.e. returns the value of
+    the original pointer).
     \item \texttt{in:} Name of a function, in which this rule should be
     applied. Can be set to a value "*" meaning that it should be used in all
     functions.
@@ -153,13 +153,16 @@ The JSON file contains following fields:
       cannot be set to "*" in this case) or \texttt{return} (before every
       terminator instruction of the given function, \texttt{in} cannot be set to
       "*" in this case).
-    \item \texttt{setFlags:} List of pairs \texttt{<flag, value>} that sets
-      all \texttt{flags} to a corresponding \texttt{value} if the rule was
-      applied. This field is optional.
     \item \texttt{conditions:} List of conditions that have to be satisfied
     (see section~\ref{sec:conditions}). Conditions are lists where the first
     element is a name of a condition and other elements are parameters passed
     to the condition.
+    \item \texttt{setFlags:} List of pairs \texttt{<flag, value>} that sets
+      all \texttt{flags} to a corresponding \texttt{value} if the rule was
+      applied. This field is optional.
+    \item \texttt{remember:} Specifies, which variable will be remembered in an
+    auxiliary list for later use if the rule is applied. This field is optional.
+
   \end{itemize}
 \item \texttt{globalVariablesRule:} A rule for instrumenting global
   variables. The rule is described with several fields:
@@ -176,6 +179,15 @@ The JSON file contains following fields:
   \end{itemize}
 
 \end{itemize}
+
+Variables in the JSON configuration file are enclosed by the '<' and '>'
+characters. These variables can be used to store some values for later use. For
+example, to store an operand of a \texttt{load} instruction to variable
+\texttt{<t>}, the field \texttt{operands} will be set to \texttt{["<t>"]}.
+Variable \texttt{<t>} will contain in the scope of the current rule the value
+of the operand of \texttt{load} instruction and it can be used e.g. as an
+argument of the function call that is to be instrumented or as an argument of a
+condition.
 
 In figure~\ref{fig:json_example}, we can see an example of an
 \texttt{instructionRule}. In this case, every time the tool comes across a
@@ -203,3 +215,51 @@ The functions whose calls are instrumented into a code must be defined in a
 file specified by the \texttt{file} field in the JSON configuration. This file
 has to be compiled to LLVM and after a successful instrumentation, the
 definitions of functions must be linked to the instrumented module.
+
+\section{Applying Rules}
+
+In this section, we describe an algorithm for applying the instrumentation
+rules on a module loaded from the given LLVM program.
+
+\todo{say something about parsing the rules?}
+
+The instrumentation is implemented to be staged, therefore the first step is to
+process all the phases one after each other in a following way: iterate over
+functions from the loaded module and check rules from the phase being processed
+that are relevant for the current function. That is, take into consideration
+only rules where \texttt{in} field is set to "*" or to the name of the
+function. Then compare the sequences of instructions defined by these rules
+(field \texttt{findInstructions}) with instructions of the current function and
+if some rule matches the sequence, begin to process the rule.
+
+To process the rule, first of all, the values of operands and return values of
+the matched instructions that are noted by the rule to be saved are stored to
+given variables. If the fields \texttt{getSizeTo} or \texttt{getPointerInfoTo}
+are present, the demanded information is stored to the given variables. Then
+all conditions are checked. If they are satisfied, the rule is ready to be
+applied. The new \texttt{call} instruction that is to be inserted is created
+according to \texttt{newInstruction} field and injected before or after the
+matched sequence of instructionaccording to \texttt{where} field.
+
+Since the parameters of the callee function might be of different types than
+values that are passed as these parameters, we might need to convert them
+before the insertion of the new call. In this case, we first insert a
+\texttt{bitcast} instruction that performs the needed conversion. For example,
+if the function that is to be called takes a 64-bit integer as a parameter, but
+the value passed as this parameter is a 32-bit integer, instruction
+\texttt{bitcast i32 value to i64} will be inserted before the new call
+instruction.
+\todo{something about failing conversions?}
+
+If the rule is successfully applied, flags are set according to field
+\texttt{setFlags} (if present). If field \texttt{remember} is defined, the
+given value is store to an auxiliary list and can be used in later phase of
+instrumentation.
+
+At the very end, after each phase from the configuration was processed, a rule
+for global variables is applied. That is, a new instruction is inserted at the
+beginning of the function given in \texttt{in} field if conditions are
+satisfied.
+
+\todo{reachable functions?}
+\todo{describe cloning metadata?}
