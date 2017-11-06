@@ -325,18 +325,18 @@ that do not use dynamic memory allocation.
 
 \subsection{Extension With Constant-Time Checks}\label{sec:constant_time}
 
-\lstset{escapeinside={<@}{@>}, columns=fullflexible, basicstyle=\ttfamily}
+\lstset{escapeinside={<@}{@>}, columns=fullflexible, basicstyle=\ttfamily, language=llvm, style=nasm}
 \begin{figure}[t]
-	\begin{lstlisting}
-    int array[10];
-    int n = input();
-    <@\vdots@>
-    <@{\color{gray} // pointer analysis knows precisely the dereferenced location}@>
-    <@{\color[RGB]{0, 135,0} \_\_INSTR\_check\_bounds(array, 10*sizeof(int), array + n, 4);}@>
-    array[n] = 1;
-	\end{lstlisting}
-	\caption{Instrumentation of a code with \texttt{\_\_INSTR\_check\_bounds}.}
-	\label{fig:check_bounds_example}
+\begin{lstlisting}
+%1 = alloca [10 x i32], align 16
+%2 = getelementptr inbounds [10 x i32],
+       [10 x i32]* %1, i64 0, i64 20
+<@{\color[RGB]{0, 135,0} \%3 = bitcast [10 x i32]* \%1 to i8*}@>
+<@{\color[RGB]{0, 135,0} call void @\_\_INSTR\_check\_bounds(i8* \%3, i64 40, i2* \%1, i64 4)}@>
+store i32 1, i32* %2, align 16
+\end{lstlisting}
+\caption{Instrumentation of a code with \texttt{\_\_INSTR\_check\_bounds}.}
+\label{fig:check_bounds_example}
 \end{figure}
 
 The following extension is not directly bound to the stages, but it
@@ -375,21 +375,21 @@ this optimized instrumentation could be used with variable size
 parameter too, but they are a subject of further research.
 
 An example of a constant-time check can be found in
-Figure~\ref{fig:check_bounds_example}.  On the line where
-\texttt{array} is being dereferenced, the pointer analysis can
-determine the address and the size of \texttt{array} precisely, hence
-the call to \texttt{\_\_INSTR\_check\_bounds} is inserted instead of
-the usual \texttt{\_\_INSTR\_check\_pointer}.
+Figure~\ref{fig:check_bounds_example}. On line 6 where the array of ten
+integers allocated on line 1 is being dereferenced by \texttt{store}
+instruction, the pointer analysis can determine the address and the size of the
+array precisely, hence the call to \texttt{\_\_INSTR\_check\_bounds} is
+inserted instead of the usual \texttt{\_\_INSTR\_check\_pointer}.
 
 As we already said, this extension is not dependent on the staged
-instrumentation.  Nevertheless, since the
-\texttt{\_\_INSTR\_check\_bounds} function does not use records, no
-memory locations need to be remembered because of this check (unlike
-when using \texttt{\_\_INSTR\_check\_pointer}), and the second stage
-of instrumentation may be able to insert fewer calls to
-\texttt{\_\_INSTR\_remember} when this extension is used (as can be
-seen also in Figure~\ref{fig:check_bounds_example} where no call to
-\texttt{\_\_INSTR\_remember} was inserted).
+instrumentation. Nevertheless, since the \texttt{\_\_INSTR\_check\_bounds}
+function does not use records, no memory locations need to be remembered
+because of this check (unlike when using \texttt{\_\_INSTR\_check\_pointer}),
+and the second phase of instrumentation may be able to insert fewer calls to
+\texttt{\_\_INSTR\_remember} when this extension is used (as can be seen also
+in Figure~\ref{fig:check_bounds_example} where no call to
+\texttt{\_\_INSTR\_remember} was inserted below the \texttt{alloca}
+instruction).
 
 \medskip
 Inserting fewer calls to \texttt{\_\_INSTR\_remember} function has
