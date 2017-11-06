@@ -60,32 +60,56 @@ found, the rule is applied (i.e.~a~new code is inserted according to the rule).
 The result of the instrumentation process is again an LLVM program.
 
 
-\section{Conditions and Flags}\label{sec:conditions}
-
-To enable conditional instrumentation, the rules can contain conditions. A
-condition is a conjunction of predicates over values from the program.
-\todo{describe later when we solve the issuie with condition system}
-\todo{describe problem of the first implementation}
+\section{Flags and Plugins}
 
 In order to pass some information between phases, flags can be defined in a
 JSON file with instrumentation rules. When inserting a call to a function, it
 is possible to set a flag and in a later phase condition some rule by a check
-whether the flag is set to some value.
+whether the flag is set to the given value (see section~\ref{sec:conditions}).
 
-\section{Plugins}
-
-The instrumentation module can be extended by plugins that can reply to queries
-derived from conditions belonging to rules. Since static analyses provided by
-plugins are supposed to be over-approximating, the predicates are set to reason
-about possibilities (e.g. may the pointer be invalid?). Therefore answering
-true is a conservative answer if an analysis does not have enough information
-to refute the predicate. A condition is evaluated as \emph{true} if all plugins
-answer that it is satisfied. If at least one plugin says that the condition is
-not satisfied, the condition is evaluated as \emph{false}.
-
-To define a list of possible conditions, all plugins have to implement the same
-interface.
+The instrumentation module can also be extended by plugins that can reply to
+queries. To define a list of possible queries, all plugins have to implement
+the same interface.
 \todo{describe interface and how it works}
+
+\section{Conditions}\label{sec:conditions}
+
+To enable conditional instrumentation, the rules can contain lists of
+conditions. To apply a rule, all conditions in the list have to be satisfied.
+
+The very first idea was to implement the conditions as lists of predicates over
+values from the program that is being verified. Since static analyses provided
+by plugins are supposed to be over-approximating, the predicates are set to
+reason about possibilities (e.g. may the pointer be invalid?). The static
+analyses could answer either \emph{true} or \emph{false}, therefore answering
+\emph{true} is a conservative answer if an analysis does not have enough
+information to refiute the predicate. A condition is evaluated as \emph{true}
+if all plugins answer that it is satisfied. If at least one plugin says that
+the condition is not satisfied, the condition is evaluated as \emph{false}.
+
+However, we later found a drawback of this method when we needed to use
+conditions that do not ask about possibilities but need an accurate answer
+(e.g. is the pointer really invalid?). The method worked fine if only one
+plugin was available, because the condition was evaluated according to one
+reply from this plugin, but when we added more plugins, we ran into problems.
+We needed the conditions that ask if some statement may hold to evaluate to
+\emph{true} if all plugins answeres \emph{true} and at the same time we needed
+the conditions that ask if some statement really holds to evaluate to
+\emph{true} if at least one plugins anseweres \emph{true} because of the
+over-approximations.
+
+Our solution was to define a condition as a query that can be parameterized
+with values from the program being verified, and a list of expected results.
+There are basically two types of these conditions:
+\begin{itemize}
+ \item conditions that check whether a flag is set to the given value, i.e. the
+ query is the name of the flag, and
+ \item conditions that check answers of plugins to given queries.
+\end{itemize}
+Answers of plugins are now not limited only to \emph{true} or \emph{false} but
+can reply with a string. A condition is satisfied if and only if the result of
+the query equals one of the values in the list of expected results.
+
 
 \section{Configuration}
 
@@ -142,9 +166,11 @@ The JSON file contains following fields:
       terminator instruction of the given function, \texttt{in} cannot be set to
       "*" in this case).
     \item \texttt{conditions:} List of conditions that have to be satisfied
-    (see section~\ref{sec:conditions}). Conditions are lists where the first
-    element is a name of a condition and other elements are parameters passed
-    to the condition.
+    (see section~\ref{sec:conditions}). A condition consists of fields
+    \texttt{query} and \texttt{expectedResult}. \texttt{Query} is a list
+    where the first element is a name of a condition and other elements are
+    parameters passed to the condition, \texttt{expectedResult} is a list of
+    expected results of the query.
     \item \texttt{setFlags:} List of pairs \texttt{<flag, value>} that sets
       all \texttt{flags} to a corresponding \texttt{value} if the rule was
       applied. This field is optional.

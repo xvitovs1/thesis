@@ -8,5 +8,6 @@
       "operands": ["<t1>","<t2>", "__INSTR_remember_global"]
    },
    "in": "main",
-   "conditions": [["isRemembered", "<t1>"]]
+   "conditions": [{ "query": ["isRemembered", "<t1>"],
+                    "expectedResult": ["true"]}]
 }
