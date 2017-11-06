@@ -75,7 +75,7 @@ For each global variable, the instrumentation inserts a call of
 to create the corresponding record. Further, the instrumentation detects memory
 handling instructions in the code and inserts calls to the corresponding
 \texttt{\_\_INSTR\_*} functions above or below these instructions. When
-instrumenting a memory allocation instruction, we insert the call of
+instrumenting a memory allocation instructioni (e.g. \texttt{alloca}), we insert the call of
 \texttt{\_\_INSTR\_remember} (for allocations on the stack) or
 \texttt{\_\_INSTR\_remember\_malloc} (for allocations on the heap) \emph{below}
 the allocation instruction as the called function needs the address of the
@@ -83,7 +83,7 @@ allocated block. In all remaining cases, the calls are inserted \emph{above} the
 corresponding instruction as we want to detect a memory handling error before
 the program reaches the actual error.
 Calls of \texttt{\_\_INSTR\_destroy\_allocas} are instrumented \emph{above} all
-\emph{return} instructions in each function. Finally, a call to
+return instructions in each function. Finally, a call to
 \texttt{\_\_INSTR\_check\_leaks()} is inserted at the end of \emph{main} to
 check for memory leaks.
 
@@ -140,3 +140,265 @@ Disadvantage of this basic approach is that it tracks all memory allocations and
 instruments all dereferences. The amount of inserted function calls is
 therefore usually very large and since the vast majority of the new code has
 an effect on reachability of error locations, it cannot be removed by slicing.
+
+\section{Extension with Pointer Analysis}\label{sec:pta}
+
+\begin{figure}[t]
+\begin{lstlisting}[language=C]
+int *r, *p;
+<@\vdots@>
+<@{\color{blue} // r may point to NULL or p}@>
+<@{\color[RGB]{0, 135,0} // r may point to NULL}@>
+r = NULL;
+<@\vdots@>
+<@{\color{blue} // r may point to NULL or p}@>
+<@{\color[RGB]{0, 135,0} // r may point to NULL}@>
+p = malloc(4);
+<@\vdots@>
+<@{\color{blue} // r may point to NULL or p}@>
+<@{\color[RGB]{0, 135,0} // r may point to NULL or p}@>
+r = p;
+<@\vdots@>
+<@{\color{blue} // r may point to NULL or p}@>
+<@{\color[RGB]{0, 135,0} // r may point to NULL or p }@><@{\color{red} or is invalidated}@>
+free(p);
+<@\vdots@>
+<@{\color{blue} // r may point to NULL or p}@>
+<@{\color[RGB]{0, 135,0} // r may point to NULL or p }@><@{\color{red} or is invalidated}@>
+*r = 1;
+\end{lstlisting}
+\caption{The difference between \emph{flow-insensitive} (blue), \emph{flow-sensitive} (green) pointer analysis and \emph{extended flow-sensitive} pointer analysis (red). For the sake of simplicity, the code is in C and not LLVM.}
+\label{fig:example2}
+\end{figure}
+
+
+Blindly instrumenting every manipulation with memory brings a big
+overhead in the reachability analysis because of the number of added
+calls that track or check the state of memory. This problem can be
+mitigated using pointer analysis as a plugin.
+
+For every pointer in the program, pointer analysis answers the
+question "What memory locations may be referenced by the pointer?"
+Thus the result of pointer analysis is a set of memory locations (the
+so-called points-to set) for every pointer. For the sake of
+soundness, a points-to set can possibly contain the \emph{unknown}
+entry where the analysis can not establish any information about
+referenced memory locations. The precision of pointer analysis can be
+tuned in several directions. One of the important traits of pointer
+analysis is whether it is \emph{flow-sensitive} or
+\emph{flow-insensitive}~\cite{Hind01}, meaning whether it takes into
+consideration the flow of data in the program and computes points-to
+sets for every location in the program separately (flow-sensitive), or
+whether it ignores the execution order of instructions and computes
+summary information about a pointer that holds at any location in the
+program (flow-insensitive). For instance, in
+Figure~\ref{fig:example2} a flow-insensitive analysis would tell us
+that \emph{r} may point to either NULL or \emph{p} anywhere in the
+program. The flow-sensitive analysis can give us information that
+until the \texttt{r = p;} assignment is performed, \emph{r} points to
+\texttt{NULL} and after that it points to \emph{p}. Another important
+characteristic of pointer analysis is whether it is
+\emph{field-sensitive}, that is whether it differentiates between
+elements of aggregate objects (arrays, structures, ...) or whether it
+takes an aggregate object as a single object without any sub-parts
+(\emph{field-insensitive}).
+
+With information from pointer analysis, we can say which memory may be
+dereferenced in many cases. If every possible memory dereference done
+by an instruction is safe, we do not need to insert the check for
+invalid dereference above this instruction. For example, in
+Figure~\ref{fig:example2} the assignments to variables \emph{p} and
+\emph{r} can be proved to be always safe and thus need not to be
+instrumented with a check. Nevertheless, typical pointer analyses do
+not take into account information whether the memory was freed or
+whether the lifetime of a local variable has ended because of the end
+of its scope.  This would cause problems in our approach in cases like
+the one in Figure~\ref{fig:example2} where the assignment \texttt{*r =
+  1} dereferences already freed memory.  Without information about
+invalidated memory, pointer analysis tells us that the assignment
+dereferences the memory allocated by the call to \texttt{malloc(4)}
+and thus writing 4 bytes to that memory is a safe operation.
+Instrumentation would incorrectly omit the check in this case.
+
+There exist sophisticated forms of pointer analysis (e.g. shape
+analysis~\cite{Rinetzky2001,Hind01}) that can model the heap and the
+stack and track the state of memory.  However, these analyses are too
+complex for our use case. We do not want the pointer analysis model
+the heap and the stack, because this is done by the reachability
+analysis later.  Therefore we extended a simple flow-sensitive
+Andersen's style~\cite{and94} pointer analysis so that it can track
+whether a memory block was possibly invalidated (i.e.~it was freed or
+its lifetime ended).  This \emph{extended pointer analysis} must be
+flow-sensitive in order to get reasonable results, as flow-insensitive
+analysis would mark all memory blocks that were freed somewhere in the
+program as possibly invalidated (freed).
+
+% The predicate that is of a great importance for checking memory
+% safety is \emph{mayBeInvalidPointer(addr, len)}.
+The query that we use for checking memory safety is
+\texttt{mayBeInvalidPointer(addr, len)}. \todo{rewrite this when conditions are updated} Satisfiability of this
+query is determined through the extended pointer
+analysis, which returns that this query holds if dereferencing
+\texttt{len} bytes starting from the address given in \texttt{addr}
+argument may be unsafe or when the analysis does not have enough
+information to refute the validity of the predicate.  The reader could
+notice that we do not pass the location in the program to the
+predicate even though we claimed that the extended pointer analysis is
+flow-sensitive. This is because \llvm that we use as the intermediate
+representation is in partial-SSA form~\cite{Lattner04}, so the pointer
+analysis can infer the location from the \texttt{addr} variable.
+%\todo{Here we use that fact that LLVM is in partial-SSA, otherwise we must pass also location
+%in the program to that predicate...}
+We added the condition \texttt{mayBeInvalidPointer(addr, len)} to
+every rule that instruments reading or writing from/to memory (where
+\texttt{addr} is the address used to access the memory and
+\texttt{len} is the number of read/written bytes). \todo{example}
+
+\section{Extension with Staged Instrumentation}\label{sec:staged}
+% \begin{figure}[t]
+% 	\begin{lstlisting}
+%     int array[10];
+%     <@{\color[RGB]{0, 135,0} \_\_INSTR\_remember(array, 10*4);}@>
+%     <@\vdots@>
+%     <@{\color{gray} // Pointer analysis evaluated this dereference as safe,}@>
+%     <@{\color{gray} // it will not be instrumented with a check.}@>
+%     array[0] = 1; <@{\color{gray} // the only dereference of array}@>
+% 	\end{lstlisting}
+% 	\caption{Instrumentation of a code with a safe dereference.}
+% 	\label{fig:no_check_example}
+% \end{figure}
+%
+Although the pointer analysis helps us to eliminate checks of safe
+dereferences, the approach still tracks all memory allocations.
+Now, there can be no corresponding checks for many of the remembered records.
+Keeping such records is useless as we will never try to look them up in any of the lists.
+Moreover, if fewer records are stored, the whole verification process is faster
+because smaller lists are searched.
+% Figure~\ref{fig:no_check_example} shows a
+% scenario where the allocation of \texttt{array} is instrumented with a call to
+% \texttt{\_\_INSTR\_remember} even though pointer analysis evaluated the only
+% dereference of \texttt{array} as safe and no check was inserted. In this case,
+% we do not need to remember the record since the information will not be used
+% anywhere.
+Figure~\ref{fig:example4} on the right shows a scenario where the
+allocations of variables \emph{p} and \emph{r} are instrumented with
+\texttt{\_\_INSTR\_remember} even though pointer analysis evaluated
+all dereferences that could point to these variables as safe and no
+check was inserted.  We thus do not need to remember the records since
+they will not be used anywhere (but they will redundantly prolong the
+list of records).
+
+The problem with instrumenting redundant calls to \texttt{\_\_INSTR\_remember*}
+functions can be solved by dividing the instrumentation into two phases:
+\begin{enumerate}
+  \item instrumentation of \texttt{\_\_INSTR\_check\_pointer} calls
+  \item instrumentation of \texttt{\_\_INSTR\_remember*} calls
+\end{enumerate}
+
+In the first phase, \texttt{\_\_INSTR\_check\_pointer} calls are inserted
+according to results of the pointer analysis as described in
+Section~\ref{sec:pta}. Additionally, the instrumentation remembers all memory
+locations that may have been dereferenced by any instrumented instruction in an
+auxiliary list by setting the field \texttt{remember} in the config file.
+
+In the second phase, we insert \texttt{\_\_INSTR\_remember*} calls. For every
+memory allocation, we first check whether the underlying memory location has
+been remembered in the first phase. \todo{describe checking} If it has, we
+create a record for this allocation because a check that can use this record
+was inserted in the first stage. Otherwise, this memory allocation is not
+instrumented.
+
+The only exception are memory allocations on the heap. As we need to
+create these records always due to the check for memory leaks at the
+end of \emph{main}, we insert calls to
+\texttt{\_\_INSTR\_remember\_malloc} function unconditionally in the
+first phase.  Nevertheless, the staged instrumentation can improve
+also on memory leaks checking. If some dynamic memory allocation is
+instrumented with \texttt{\_\_INSTR\_remember\_malloc} in the first
+phase, the \texttt{malloc\_present} flag is set to \emph{true}.  In
+the second stage, \texttt{\_\_INSTR\_check\_leaks} is instrumented
+only under the condition that the \texttt{malloc\_present} flag was
+set to \emph{true}. Therefore we can avoid leaks checking in programs
+that do not use dynamic memory allocation.
+
+\todo{example of rules?}
+
+\subsection{Extension With Constant-Time Checks}\label{sec:constant_time}
+
+\lstset{escapeinside={<@}{@>}, columns=fullflexible, basicstyle=\ttfamily}
+\begin{figure}[t]
+	\begin{lstlisting}
+    int array[10];
+    int n = input();
+    <@\vdots@>
+    <@{\color{gray} // pointer analysis knows precisely the dereferenced location}@>
+    <@{\color[RGB]{0, 135,0} \_\_INSTR\_check\_bounds(array, 10*sizeof(int), array + n, 4);}@>
+    array[n] = 1;
+	\end{lstlisting}
+	\caption{Instrumentation of a code with \texttt{\_\_INSTR\_check\_bounds}.}
+	\label{fig:check_bounds_example}
+\end{figure}
+
+The following extension is not directly bound to the stages, but it
+can amplify the positive effect of staged instrumentation and
+therefore we present it in this section. Let us assume that there is
+an instruction that may possibly perform an unsafe dereference
+(i.e.~the \texttt{mayBeInvalidDereference} predicate was determined to
+hold and thus a check has to be inserted). In some cases, we can
+statically find the address and the size of the memory block that is
+being dereferenced and therefore we do not need to look for the
+corresponding record in the list during run-time. The cases where we
+can do this must meet these conditions:
+\begin{itemize}
+\item the pointer analysis must give us a single memory location where the
+dereferenced pointer must point
+\item the memory location is not \emph{unknown}, NULL nor invalidated
+\item the size of this memory location is constant
+\end{itemize}
+
+We query the pointer analysis in a similar way as in
+Section~\ref{sec:pta} to get this information.  If the requirements
+are not satisfied, the dereference must be instrumented with the usual
+\texttt{\_\_INSTR\_check\_pointer}. Otherwise, a call to a
+\texttt{\_\_INSTR\_check\_bounds} function is be
+inserted. \texttt{\_\_INSTR\_check\_bounds} function takes four
+arguments: the address and the size of the dereferenced memory block
+(provided by the pointer analysis), the pointer that is being
+dereferenced, and the number of dereferenced bytes.  This information
+is sufficient to decide whether an out-of-bound error occurs.  The
+last requirement demands that the size of the memory location is
+constant, thus known at the compile time (and, consequently, known by
+the pointer analysis).  This is to avoid the cases where the size
+parameter used when allocating the memory may change between the
+allocation and the inserted checks.  There are definitely cases where
+this optimized instrumentation could be used with variable size
+parameter too, but they are a subject of further research.
+
+An example of a constant-time check can be found in
+Figure~\ref{fig:check_bounds_example}.  On the line where
+\texttt{array} is being dereferenced, the pointer analysis can
+determine the address and the size of \texttt{array} precisely, hence
+the call to \texttt{\_\_INSTR\_check\_bounds} is inserted instead of
+the usual \texttt{\_\_INSTR\_check\_pointer}.
+
+As we already said, this extension is not dependent on the staged
+instrumentation.  Nevertheless, since the
+\texttt{\_\_INSTR\_check\_bounds} function does not use records, no
+memory locations need to be remembered because of this check (unlike
+when using \texttt{\_\_INSTR\_check\_pointer}), and the second stage
+of instrumentation may be able to insert fewer calls to
+\texttt{\_\_INSTR\_remember} when this extension is used (as can be
+seen also in Figure~\ref{fig:check_bounds_example} where no call to
+\texttt{\_\_INSTR\_remember} was inserted).
+
+\medskip
+Inserting fewer calls to \texttt{\_\_INSTR\_remember} function has
+a positive effect on the speed of reachability analysis since the lists
+used to keep records are shorter. All the described extensions together
+can significantly reduce the number of instrumented instructions
+which have also a positive effect on the portion of code possibly
+removed by slicing before the reachability analysis.
+
+
+
+
