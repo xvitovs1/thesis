@@ -36,6 +36,10 @@ To maintain the records, we use the following functions:
   \\ Since local variables on the stack are destroyed when a function
   finishes, this function removes all relevant records from the \stacklist right
   before returning from a function.
+  \item \texttt{\_\_INSTR\_set\_flag()}
+  \\ At the beginning of a function, it sets flag in the \stacklist to mark the
+  point to which extent the records in this list should be removed when
+  \texttt{\_\_INSTR\_destroy\_allocas()} is called.
 \end{itemize}
 
 There are also two more functions that use records to check
@@ -82,10 +86,11 @@ the allocation instruction as the called function needs the address of the
 allocated block. In all remaining cases, the calls are inserted \emph{above} the
 corresponding instruction as we want to detect a memory handling error before
 the program reaches the actual error.
-Calls of \texttt{\_\_INSTR\_destroy\_allocas} are instrumented \emph{above} all
-return instructions in each function. Finally, a call to
-\texttt{\_\_INSTR\_check\_leaks()} is inserted at the end of \emph{main} to
-check for memory leaks.
+Calls of \texttt{\_\_INSTR\_set\_flag} are instrumented at the beginnings of
+all functions and calls of \texttt{\_\_INSTR\_destroy\_allocas} are
+instrumented \emph{above} all return instructions in each function. Finally, a
+call to \texttt{\_\_INSTR\_check\_leaks()} is inserted at the end of
+\emph{main} to check for memory leaks.
 
 \lstset{escapeinside={<@}{@>}, columns=fullflexible, basicstyle=\ttfamily, language=llvm, style=nasm}
 \begin{figure}[t]
@@ -138,6 +143,29 @@ to the types required by \texttt{\_\_INSTR\_*} functions.
 %Finally, the code is instrumented with a call to
 %\texttt{\_\_INSTR\_check\_pointer(r, 4)} which detects the use-after-free
 %error.
+\lstset{escapeinside={<@}{@>}, columns=fullflexible, basicstyle=\ttfamily, language=llvm, style=nasm}
+\begin{figure}[t]
+\lstinputlisting{examples/setflag.ll}
+\caption{Instrumentation of a function that returns a local object.}
+\label{fig:examplesetflags}
+\end{figure}
+
+In Figure~\ref{fig:examplesetflags}, we demonstrate a code where
+\texttt{\_\_INSTR\_set\_flag} and \texttt{\_\_INSTR\_destroy\_allocas}
+functions are necessary. The function \texttt{getArray} allocates an array of
+ten integers and returns a pointer to this array. The array was allocated on
+stack which means its scope ends at the end of the function. If this function
+is called, any dereference of the returned pointer would be invalid. However,
+the record was stored to the \stacklist on line 5.  If the functions
+\texttt{\_\_INSTR\_set\_flag} and \texttt{\_\_INSTR\_destroy\_allocas} were not
+called, a check of any dereference of the returned pointer would find the
+record for corresponding memory block in the \stacklist and the error would not
+be discovered. If these two functions are called, all records in the \stacklist
+up to a record with the flag set by the call on line 2 (that is, all records
+for local variables from the current function) are destroyed at the end of
+    function \texttt{getArray} on line 8. In this case, the dereferenced
+    returned pointer would no longer be present in the \stacklist and an
+    invalid pointer dereference would be reported.
 
 Disadvantage of this basic approach is that it tracks all memory allocations and
 instruments all dereferences. The amount of inserted function calls is
@@ -170,7 +198,7 @@ free(p);
 <@{\color[RGB]{0, 135,0} // r may point to NULL or p }@><@{\color{red} or is invalidated}@>
 *r = 1;
 \end{lstlisting}
-\caption{The difference between \emph{flow-insensitive} (blue), \emph{flow-sensitive} (green) pointer analysis and \emph{extended flow-sensitive} pointer analysis (red). For the sake of simplicity, the code is in C and not LLVM.}
+\caption{The difference between \emph{flow-insensitive} (blue), \emph{flow-sensitive} (green) pointer analysis and \emph{extended flow-sensitive} pointer analysis (green and red). For the sake of simplicity, the code is in C and not LLVM.}
 \label{fig:example2}
 \end{figure}
 
