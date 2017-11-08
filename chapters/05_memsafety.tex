@@ -22,15 +22,17 @@ To maintain the records, we use the following functions:
   \item \texttt{\_\_INSTR\_remember(address, type size, number of fields)}
   \\Creates a record and inserts it to the \stacklist.
   \item \texttt{\_\_INSTR\_remember\_malloc(address, size)}
-  \\Creates a record and inserts it to the \heaplist.
+  \\Creates a record and inserts it to the \heaplist. If the address is equal
+  to 0 (i.e.  address for NULL), no record is stored.
   \item \texttt{\_\_INSTR\_remember\_global(address, size)}
   \\Creates a record and inserts it to the \globalslist.
   \item \texttt{\_\_INSTR\_free(address)}
   \\Checks whether the address refers to some block allocated on the heap,
   i.e., whether there is a record with this address in the \heaplist. If such a
-  record exists, it is removed from the \heaplist\ and inserted into the
+  record exists, it is removed from the \heaplist and inserted into the
   \dealloclist. If there is a record with this address, but it is found in the
-  \dealloclist\, we report double free error. In all remaining cases, an invalid
+  \dealloclist, we report double free error. If the address is equal to 0 (i.e.
+  address for NULL), nothing happens. In all remaining cases, an invalid
   deallocation is reported.
   \item \texttt{\_\_INSTR\_destroy\_allocas()}
   \\ Since local variables on the stack are destroyed when a function
@@ -156,16 +158,16 @@ functions are necessary. The function \texttt{getArray} allocates an array of
 ten integers and returns a pointer to this array. The array was allocated on
 stack which means its scope ends at the end of the function. If this function
 is called, any dereference of the returned pointer would be invalid. However,
-the record was stored to the \stacklist on line 5.  If the functions
+the record was stored to the \stacklist on line 5. If the functions
 \texttt{\_\_INSTR\_set\_flag} and \texttt{\_\_INSTR\_destroy\_allocas} were not
 called, a check of any dereference of the returned pointer would find the
 record for corresponding memory block in the \stacklist and the error would not
 be discovered. If these two functions are called, all records in the \stacklist
 up to a record with the flag set by the call on line 2 (that is, all records
 for local variables from the current function) are destroyed at the end of
-    function \texttt{getArray} on line 8. In this case, the dereferenced
-    returned pointer would no longer be present in the \stacklist and an
-    invalid pointer dereference would be reported.
+function \texttt{getArray} on line 8. In this case, the dereferenced
+returned pointer would no longer be present in the \stacklist and an
+invalid pointer dereference would be reported.
 
 Disadvantage of this basic approach is that it tracks all memory allocations and
 instruments all dereferences. The amount of inserted function calls is
@@ -329,11 +331,19 @@ because smaller lists are searched.
 % dereference of \texttt{array} as safe and no check was inserted. In this case,
 % we do not need to remember the record since the information will not be used
 % anywhere.
-Figure~\ref{fig:example4} on the right shows a scenario where the
-allocations of variables \emph{p} and \emph{r} are instrumented with
+
+\lstset{escapeinside={<@}{@>}, columns=fullflexible, basicstyle=\ttfamily, language=llvm, style=nasm}
+\begin{figure}[t]
+\lstinputlisting{examples/noremember.ll}
+\caption{Instrumentation of a function that returns a local object.}
+\label{fig:exampleNoRemember}
+\end{figure}
+
+Figure~\ref{fig:exampleNoRemember} shows a scenario where the
+allocations on line and  are instrumented with
 \texttt{\_\_INSTR\_remember} even though pointer analysis evaluated
 all dereferences that could point to these variables as safe and no
-check was inserted.  We thus do not need to remember the records since
+check was inserted. We thus do not need to remember the records since
 they will not be used anywhere (but they will redundantly prolong the
 list of records).
 
