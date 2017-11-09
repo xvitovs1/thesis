@@ -75,19 +75,18 @@ and only if some of these asserts can be violated, i.e.~if an error
 location is reachable.
 
 Calls to the hitherto described functions are inserted into the analyzed
-program to keep track of the state of the memory.
-For each global variable, the instrumentation inserts a call of
-\texttt{\_\_INSTR\_remember\_global} to the beginning of \emph{main} in order
-to create the corresponding record. Further, the instrumentation detects memory
-handling instructions in the code and inserts calls to the corresponding
-\texttt{\_\_INSTR\_*} functions above or below these instructions. When
-instrumenting a memory allocation instructioni (e.g. \texttt{alloca}), we insert the call of
-\texttt{\_\_INSTR\_remember} (for allocations on the stack) or
-\texttt{\_\_INSTR\_remember\_malloc} (for allocations on the heap) \emph{below}
-the allocation instruction as the called function needs the address of the
-allocated block. In all remaining cases, the calls are inserted \emph{above} the
-corresponding instruction as we want to detect a memory handling error before
-the program reaches the actual error.
+program to keep track of the state of the memory.  For each global variable,
+the instrumentation inserts an \texttt{\_\_INSTR\_remember\_global} call to the
+beginning of \emph{main} in order to create the corresponding record. Further,
+the instrumentation detects memory handling instructions in the code and
+inserts calls to the corresponding \texttt{\_\_INSTR\_*} functions above or
+below these instructions. When instrumenting a memory allocation instruction
+(e.g. \texttt{alloca}), we insert the call of \texttt{\_\_INSTR\_remember} (for
+allocations on the stack) or \texttt{\_\_INSTR\_remember\_malloc} (for
+allocations on the heap) \emph{below} the allocation instruction as the called
+function needs the address of the allocated block. In all remaining cases, the
+calls are inserted \emph{above} the corresponding instruction as we want to
+detect a memory handling error before the program reaches the actual error.
 Calls of \texttt{\_\_INSTR\_set\_flag} are instrumented at the beginnings of
 all functions and calls of \texttt{\_\_INSTR\_destroy\_allocas} are
 instrumented \emph{above} all return instructions in each function. Finally, a
@@ -335,20 +334,21 @@ because smaller lists are searched.
 \lstset{escapeinside={<@}{@>}, columns=fullflexible, basicstyle=\ttfamily, language=llvm, style=nasm}
 \begin{figure}[t]
 \lstinputlisting{examples/noremember.ll}
-\caption{Instrumentation of a function that returns a local object.}
+\caption{Instrumentation of a code where no checks are inserted, \texttt{\_\_INSTR\_remember*} functions are therefore redundant.}
 \label{fig:exampleNoRemember}
 \end{figure}
 
-Figure~\ref{fig:exampleNoRemember} shows a scenario where the
-allocations on line and  are instrumented with
-\texttt{\_\_INSTR\_remember} even though pointer analysis evaluated
-all dereferences that could point to these variables as safe and no
-check was inserted. We thus do not need to remember the records since
-they will not be used anywhere (but they will redundantly prolong the
-list of records).
+Figure~\ref{fig:exampleNoRemember} shows a scenario where the allocations on
+line 7 and 10 are instrumented with \texttt{\_\_INSTR\_remember} even though
+pointer analysis evaluated all dereferences that could point to these variables
+as safe and no check was inserted. We thus do not need to remember the records
+since they will not be used anywhere (but they will redundantly prolong the
+list of records). The same holds for the global variable
+\texttt{globalInteger}.
 
-The problem with instrumenting redundant calls to \texttt{\_\_INSTR\_remember*}
-functions can be solved by dividing the instrumentation into two phases:
+The problem with instrumenting redundant calls to functions
+\texttt{\_\_INSTR\_remember*} can be solved by dividing the instrumentation
+into two phases:
 \begin{enumerate}
   \item instrumentation of \texttt{\_\_INSTR\_check\_pointer} calls
   \item instrumentation of \texttt{\_\_INSTR\_remember*} calls
@@ -438,7 +438,7 @@ Figure~\ref{fig:check_bounds_example}. On line 6 where the array of ten
 integers allocated on line 1 is being dereferenced by \texttt{store}
 instruction, the pointer analysis can determine the address and the size of the
 array precisely, hence the call to \texttt{\_\_INSTR\_check\_bounds} is
-inserted instead of the usual \texttt{\_\_INSTR\_check\_pointer}.
+inserted instead of the usual call to \texttt{\_\_INSTR\_check\_pointer}.
 
 As we already said, this extension is not dependent on the staged
 instrumentation. Nevertheless, since the \texttt{\_\_INSTR\_check\_bounds}
