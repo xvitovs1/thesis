@@ -35,38 +35,33 @@ of the instrumentation tools that are general and configurable, it does not
 simplify the work for the user in terms of writing a code that performs the
 core of the instrumentation process.
 
-
-\section{LLVM-IR-MemProtect}
-
-\url{https://github.com/toaarnio/llvm-ir-memprotect}
+\section{Loom Instrumentation Library}
 
 \section{LLVM IR Trace Profiler}
 
 \url{https://github.com/ysshao/LLVM-Tracer#llvm-ir-trace-profiler-llvm-triacer-12}
-
-\section{LLVM Instrumentation Pass}
-
-\url{https://github.com/imdea-software/LLVM\_Instrumentation\_Pass}
 
 \section{Other Tools}
 
 In this section, we describe tools that are not designed for general
 instrumentation but use instrumentation over LLVM for various purposes.
 
-\url{https://clang.llvm.org/docs/UsersManual.html#id34}
-
 Clang compiler provides several sanitizers that use instrumentation to insert
 runtime checks for various errors and undefined behaviour. It offers a memory
-error detection with AddressSanitizer
-\textcolor{red}{\url{https://clang.llvm.org/docs/AddressSanitizer.html}}
-(out-of-bounds dereferences, use-after-free, double-free, etc.), a detection of
-data races in parallel programs with ThreadSanitizer or undefined behaviour
-detection with UndefinedBehaviorSanitizer (e.g. integer overflows). All these
-sanitizers modify the code during compilation and insert run-time checks.
-Disadvantage is slowdown and memory overhead these tool introduce.
+error detection (out-of-bounds dereferences, use-after-free, double-free, etc.)
+with AddressSanitizer, that instruments each memory access with a check to a
+\textit{shadow memory}. The shadow memory contains metadata about corresponding
+program memory, mainly \textit{poisoned redzones} that mark locations of the
+memory that should not be accessed. ThreadSanitizer is used for detection of
+data races in parallel programs. The analyzed code is instrumented such that it
+keeps information about each memory access and checks whether the access takes
+part in a race. UndefinedBehaviourSanitizer offers undefined behaviour
+detection (e.g. integer overflows) by instrumenting all operations that may
+lead to undefined behaviour with a check. All these sanitizers modify the code
+during compilation and insert run-time checks.  Disadvantage is slowdown and
+memory overhead these tool introduce.
 
 SAFECode (Static Analysis For safe Execution of Code)
-\url{http://safecode.cs.illinois.edu/index.html} is a project developed at
 University of Illinois that checks memory safety properties, such as accessing
 valid memory locations, out-of-bounds accesses, invalid frees and detection of
 dangling pointers. Like Clang sanitizers it inserts run-time checks at
