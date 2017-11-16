@@ -48,21 +48,31 @@ core of the instrumentation process.
 
 \url{https://github.com/imdea-software/LLVM\_Instrumentation\_Pass}
 
-\section{SAFECode}
+\section{Other Tools}
 
-\url{http://safecode.cs.illinois.edu/index.html}
-
-\section{Clang Sanitizers}
+In this section, we describe tools that are not designed for general
+instrumentation but use instrumentation over LLVM for various purposes.
 
 \url{https://clang.llvm.org/docs/UsersManual.html#id34}
-\medskip
 
 Clang compiler provides several sanitizers that use instrumentation to insert
 runtime checks for various errors and undefined behaviour. It offers a memory
 error detection with AddressSanitizer
 \textcolor{red}{\url{https://clang.llvm.org/docs/AddressSanitizer.html}}
-(out-of-bound dereferences, use-after-free, double-free, etc.), a detection of
+(out-of-bounds dereferences, use-after-free, double-free, etc.), a detection of
 data races in parallel programs with ThreadSanitizer or undefined behaviour
 detection with UndefinedBehaviorSanitizer (e.g. integer overflows). All these
-sanitizers modify the code at the compile-time and insert run-time checks.
+sanitizers modify the code during compilation and insert run-time checks.
 Disadvantage is slowdown and memory overhead these tool introduce.
+
+SAFECode (Static Analysis For safe Execution of Code)
+\url{http://safecode.cs.illinois.edu/index.html} is a project developed at
+University of Illinois that checks memory safety properties, such as accessing
+valid memory locations, out-of-bounds accesses, invalid frees and detection of
+dangling pointers. Like Clang sanitizers it inserts run-time checks at
+compile-time. Moreover, it uses static analysis to minimize the number of
+inserted run-time checks.
+
+Another tool that uses instrumentation is Map2Check. Like Symbiotic, it uses
+KLEE as symbolic executor and instruments the code that is being analyzed to
+check memory safety properties.
