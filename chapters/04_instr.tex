@@ -59,18 +59,41 @@ instructions and it looks if they match any instrumentation rule. If a match is
 found, the rule is applied (i.e.~a~new code is inserted according to the rule).
 The result of the instrumentation process is again an LLVM program.
 
-
 \section{Flags and Plugins}
 
 In order to pass some information between phases, flags can be defined in a
 JSON file with instrumentation rules. When inserting a call to a function, it
-is possible to set a flag and in a later phase condition some rule by a check
+is possible to set a flag and, in a later phase, condition some rule by a check
 whether the flag is set to the given value (see section~\ref{sec:conditions}).
 
 The instrumentation module can also be extended by plugins that can reply to
 queries. To define a list of possible queries, all plugins have to implement
-the same interface.
-\todo{describe interface and how it works}
+the same interface. The interface consists of a set of virtual functions that
+correspond to the queries and return default string values. For example, a
+query "Do pointers \texttt{p1} and \texttt{p2} point to the same memory
+location?" can correspond to a virtual function \texttt{pointersAreEqual(p1,
+p2)} that returns \emph{"unknown"} by default. These functions can be redefined
+by concrete plugins that are able to decide the corresponding queries, e.g.
+the function \texttt{pointersAreEqual} can be redefined by a plugin for a
+pointer analysis, since with this analysis it is possible to determine whether
+two pointers point to the same memory location.
+
+Currently, following queries are available \todo{apply refactoring}:
+\begin{description}
+  \item[isValidPointer(p, len)] Is a dereference of a pointer \texttt{p} of
+  length \texttt{len} valid operation? Possible answers: \emph{"true"},
+  \emph{"false"}, \emph{"unknown"}, default answer: \emph{"unknown"}.
+  \item[hasKnownSize(block)] Can we statically determine the size of the
+  \texttt{block} that is being dereferenced? Possible answers: \emph{"true"},
+  \emph{"false"}, \emph{"unknown"}, default answer: \emph{"unknown"}.
+  \item[pointersAreEqual(a,b)]
+  \item[isNull(p)] Can the given pointer \texttt{p} point to a \emph{null}
+  value? Possible answers: \emph{"true"}, \emph{false}, default answer:
+  \emph{"true"}.
+\end{description}
+The list of queries can be easily appended by adding more virtual functions
+that return string values to teh interface and by reimplementing the function
+that links the queries with corresponding functions.
 
 \section{Conditions}\label{sec:conditions}
 
@@ -89,14 +112,14 @@ the condition is not satisfied, the condition is evaluated as \emph{false}.
 
 However, we later found a drawback of this method when we needed to use
 conditions that do not ask about possibilities but need an accurate answer
-(e.g. is the pointer really invalid?). The method worked fine if only one
-plugin was available, because the condition was evaluated according to one
-reply from this plugin, but when we added more plugins, we ran into problems.
-We needed the conditions that ask if some statement may hold to evaluate to
-\emph{true} if all plugins answeres \emph{true} and at the same time we needed
-the conditions that ask if some statement really holds to evaluate to
-\emph{true} if at least one plugins anseweres \emph{true} because of the
-over-approximations.
+(e.g. is the size of this allocated memory known at compile-time?). The method
+worked fine if only one plugin was available, because the condition was
+evaluated according to one reply from this plugin, but when we added more
+plugins, we ran into problems. We needed the conditions that ask if some
+statement may hold to evaluate to \emph{true} if all plugins answeres
+\emph{true} because of the over-approximations and at the same time we needed
+some conditions that ask if some statement really holds to evaluate to
+\emph{true} if at least one plugin answeres \emph{true}.
 
 Our solution was to define a condition as a query that can be parameterized
 with values from the program being verified, and a list of expected results.
@@ -107,9 +130,13 @@ There are basically two types of these conditions:
  \item conditions that check answers of plugins to given queries.
 \end{itemize}
 Answers of plugins are now not limited only to \emph{true} or \emph{false} but
-can reply with a string. A condition is satisfied if and only if the result of
-the query equals one of the values in the list of expected results.
-
+can reply with a string. A plugin can now for example answer also with
+\emph{"unknown"}. A condition is satisfied if and only if some result from a
+plugin equals one of the values in the list of expected results. This solves
+the above mentioned problem as the list of expected results for queries about
+possibilities can contain both \emph{"true"} and \emph{"unknown"} and the list
+of expected results for queries that expect accurate answer can contain just
+\emph{"true"}.
 
 \section{Configuration}
 
@@ -254,7 +281,6 @@ if the function that is to be called takes a 64-bit integer as a parameter, but
 the value passed as this parameter is a 32-bit integer, instruction
 \texttt{bitcast i32 value to i64} will be inserted before the new call
 instruction.
-\todo{something about failing conversions?}
 
 If the rule is successfully applied, flags are set according to field
 \texttt{setFlags} (if present). If field \texttt{remember} is defined, the
@@ -274,9 +300,10 @@ In figure~\ref{fig:json_example}, we can see an example of an
 \texttt{load} instruction in any function (\texttt{in} is set to "*"), the only
 operands of \texttt{load} is stored to a variable \texttt{<t1>}, size of the
 type that is being load is stored to a variable \texttt{<t2>} and condition
-\texttt{!isValidPointer} is checked (i.e. a plugin's function
+\texttt{isValidPointer} is checked for all plugins (i.e. a function
 \texttt{isValidPointer} is called with arguments \texttt{<t1>} and
-\texttt{<t2>}). If the condition holds, call of a function
+\texttt{<t2>} by all plugins). If some plugin answered either \emph{"false"} or
+\emph{"unknown"}, the condition holds and call of a function
 \texttt{\_\_INSTR\_check\_pointer} with arguments \texttt{<t1>} and
 \texttt{<t2>} is inserted \emph{before} the current \texttt{load} instruction.
 After a successful application of this rule, flag \texttt{loadPresent} is set
@@ -285,7 +312,7 @@ to \emph{true}.
 An example of a \texttt{globalVariablesRule} can be found in
 figure~\ref{fig:json_example2}. The value of a global variable is stored to a
 variable \texttt{<t1>} and size of the type of the global variable is stored to
-a variable \texttt{<t2>}. A plugin is asked whether the given condition
+a variable \texttt{<t2>}. Plugins are asked whether the given condition
 \texttt{isRemembered} with argument \texttt{<t1>} holds and if the answer is
 positive, new call of a function \texttt{\_\_INSTR\_remember\_global} with
 arguments \texttt{<t1>} and \texttt{<t2>} is inserted at the beginning of

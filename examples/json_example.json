@@ -13,7 +13,7 @@
   },
   "where": "before",
   "conditions": [{ "query": ["isValidPointer", "<t1>", "<t2>"],
-                   "expectedResult": ["false"] }],
+                   "expectedResult": ["false", "unknown"] }],
   "in": "*",
   "setFlags": [["loadPresent", "true"]]
 }
