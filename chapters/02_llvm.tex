@@ -1,12 +1,9 @@
-\url{www.aosabook.org/en/llvm.html}
-\medskip
-
-LLVM is an open source project that provides compiler technologies designed to
-be independent of a target architecture. It uses LLVM IR as an intermediate
-representation code. It can be used in three different forms: human readable
-representation, bitcode representation and an in-memory compiler IR. From this
-point we will take only the human readable form into consideration for the sake
-of simplicity.
+LLVM~\cite{llvm} is an open source project that provides compiler technologies
+designed to be independent of a target architecture. It uses LLVM IR as an
+intermediate representation code. It can be used in three different forms:
+human readable representation, bitcode representation and an in-memory compiler
+IR. From this point we will take only the human readable form into
+consideration for the sake of simplicity.
 
 \begin{figure}[h]
  \lstinputlisting[language=llvm,style=nasm]{examples/llvm.ll}
@@ -29,7 +26,7 @@ a control flow graph for a function. In figure~\ref{fig:llvm_example} we give
 an example of an LLVM module with two function definitions, each containing one
 basic block.
 
-LLVM is in SSA form (static single assignment form), which means that each
+LLVM is in SSA form~\cite{ssa} (static single assignment form), which means that each
 variable can be assigned only once and must be defined before its use. It uses:
 
 \begin{itemize}
@@ -51,8 +48,8 @@ LLVM is a strongly typed language, i.e. all values and variables are typed.
 There are simple types such as integer type (e.g. \texttt{i32} for a 32-bit
 integer), floating point types (e.g. \texttt{float} or \texttt{double}) and
 pointer type (e.g. \texttt{i32*} for a pointer to a 32-bit integer), and also
-types for vectors (e.g. \texttt{<10 x i32>} for a vector of 10 32-bit
-integers), arrays (e.g. \texttt{[10 x i32]} for an array of 10 32-bit integers)
+types for vectors (e.g. \texttt{<10 x i32>} for a vector of ten 32-bit
+integers), arrays (e.g. \texttt{[10 x i32]} for an array of ten 32-bit integers)
 and structures (e.g. \texttt{\{i32, i32\}} for a pair of 32-bit integers). For
 example, in figure~\ref{fig:llvm_example} we can see that global variable
 \texttt{number} is a 32-bit integer and \texttt{a} is an array of ten

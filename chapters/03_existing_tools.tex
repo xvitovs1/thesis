@@ -1,10 +1,7 @@
 \section{LLVMPin Instrumentation Framework}
 
-\url{http://eces.colorado.edu/~blomsted/llvmpin/llvmpin.html}
-\medskip
-
-LLVMPin is a framework that simplifies implementing tools for LLVM~IR
-instrumentation. The framework basically consists of two scripts:
+LLVMPin~\cite{llvmpin} is a framework that simplifies implementing tools for
+LLVM~IR instrumentation. The framework basically consists of two scripts:
 
 \begin{itemize}
     \item \texttt{llvmpin-gen} runs the LLVMPin tool implemented by
@@ -42,24 +39,25 @@ instrumentation but use instrumentation over LLVM for various purposes.
 Clang compiler provides several sanitizers that use instrumentation to insert
 runtime checks for various errors and undefined behaviour. It offers a memory
 error detection (out-of-bounds dereferences, use-after-free, double-free, etc.)
-with AddressSanitizer, that instruments each memory access with a check to a
-\textit{shadow memory}. The shadow memory contains metadata about corresponding
-program memory, mainly \textit{poisoned redzones} that mark locations of the
-memory that should not be accessed. ThreadSanitizer is used for detection of
-data races in parallel programs. The analyzed code is instrumented such that it
-keeps information about each memory access and checks whether the access takes
-part in a race. UndefinedBehaviourSanitizer offers undefined behaviour
-detection (e.g. integer overflows) by instrumenting all operations that may
-lead to undefined behaviour with a check. All these sanitizers modify the code
-during compilation and insert run-time checks. Disadvantage is slowdown and
-memory overhead these tool introduce.
+with AddressSanitizer~\cite{asan}, that instruments each memory access with a
+check to a \textit{shadow memory}. The shadow memory contains metadata about
+corresponding program memory, mainly \textit{poisoned redzones} that mark
+locations of the memory that should not be accessed.
+ThreadSanitizer~\cite{tsan} is used for detection of data races in parallel
+programs. The analyzed code is instrumented such that it keeps information
+about each memory access and checks whether the access takes part in a race.
+UndefinedBehaviourSanitizer offers undefined behaviour detection (e.g. integer
+overflows) by instrumenting all operations that may lead to undefined behaviour
+with a check. All these sanitizers modify the code during compilation and
+insert run-time checks. Disadvantage is slowdown and memory overhead these tool
+introduce.
 
-SAFECode (Static Analysis For safe Execution of Code) is a tool developed at
-University of Illinois that checks memory safety properties, such as accessing
-valid memory locations, out-of-bounds accesses, invalid frees and detection of
-dangling pointers. Like Clang sanitizers it inserts run-time checks at
-compile-time. Moreover, it uses static analysis to minimize the number of
-inserted run-time checks.
+SAFECode~\cite{safecode} (Static Analysis For safe Execution of Code) is a tool
+developed at University of Illinois that checks memory safety properties, such
+as accessing valid memory locations, out-of-bounds accesses, invalid frees and
+detection of dangling pointers. Like Clang sanitizers it inserts run-time
+checks at compile-time. Moreover, it uses static analysis to minimize the
+number of inserted run-time checks.
 
 Another tool that uses instrumentation to check memory safety properties is
 Map2Check. Like Symbiotic, it uses KLEE as symbolic executor. \todo{describe
@@ -73,8 +71,6 @@ they should be instrumented on the caller site or the callee site, what
 structures should be instrumented and whether they should be instrumented on
 reads or writes, etc.
 
-LLVM IR Trace Profiler (LLVM-Tracer) is an LLVM pass that, like Loom,
+LLVM IR Trace Profiler~\cite{tracer} (LLVM-Tracer) is an LLVM pass that, like Loom,
 instruments the given code to expose values. It traces dynamic register values
 as well as memory addresses.
-
-\url{https://github.com/ysshao/LLVM-Tracer#llvm-ir-trace-profiler-llvm-triacer-12}
