@@ -34,13 +34,13 @@ of checking some property violations (e.g. checking for NULL pointer
 dereference) to a reachability problem. In other words, a given program is
 instrumented such that the original program violates the property if and only
 if some error location is reachable in the instrumented program. Program
-    slicing is a technique that removes a code that is not relevant for the
-    reachability of error locations, therefore the actual analysis is performed
-    on a smaller amount of code and is consequently faster. The sliced program
-    is passed to a symbolic executor that goes through every possible path of a
-    program (if the program terminates) because it uses symbolic values of
-    variables instead of the real values and looks whether some error location
-    is reachable.
+slicing~\cite{ChalupaThesis} is a technique that removes a code that is not
+relevant for the reachability of error locations, therefore the actual
+analysis is performed on a smaller amount of code and is consequently
+faster. The sliced program is passed to a symbolic executor~\cite{King} that goes
+through every possible path of a program (if the program terminates)
+because it uses symbolic values of variables instead of the real values and
+looks whether some error location is reachable.
 
 
 Chapter~\ref{chap:tools} lists the existing tools for instrumenting LLVM IR and
@@ -54,6 +54,7 @@ be provided.
 Chapter~\ref{chap:memsafety} deals with a configuration of instrumentation for
 checking memory safety errors.
 
-In chapter~\ref{chap:eval} we show evaluation of instrumentation designed
-for memory safety implemented in \symbiotic. We compare various enhancements on
-a set of benchmarks from SV-COMP.
+In chapter~\ref{chap:eval} we show evaluation of instrumentation designed for
+memory safety implemented in \symbiotic. We compare various enhancements on a
+set of benchmarks from
+SV-COMP~\footnote{\url{https://sv-comp.sosy-lab.org/2017/benchmarks.php}}.
