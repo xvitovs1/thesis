@@ -81,18 +81,19 @@ two pointers point to the same memory location.
 Currently, following queries are available \todo{apply refactoring}:
 \begin{description}
   \item[isValidPointer(p, len)] Is a dereference of a pointer \texttt{p} of
-  length \texttt{len} valid operation? Possible answers: \emph{"true"},
-  \emph{"false"}, \emph{"unknown"}, default answer: \emph{"unknown"}.
+  length \texttt{len} valid operation?
   \item[hasKnownSize(block)] Can we statically determine the size of the
-  \texttt{block} that is being dereferenced? Possible answers: \emph{"true"},
-  \emph{"false"}, \emph{"unknown"}, default answer: \emph{"unknown"}.
-  \item[pointersAreEqual(a,b)]
-  \item[isNull(p)] Can the given pointer \texttt{p} point to a \emph{null}
-  value? Possible answers: \emph{"true"}, \emph{false}, default answer:
-  \emph{"true"}.
+  \texttt{block} that is being dereferenced?
+  \item[pointsTo(p,a)] Does a pointer \texttt{p} point to a value \texttt{a}?
+  \item[isNull(p)] Does the given pointer \texttt{p} point to a \emph{null}
+  value?
 \end{description}
+There are three possible answers for these queries:
+\emph{"true"}, \emph{"unknown"} and \emph{"false"}. The default answer for all
+these queries is \emph{"unknown"}.
+
 The list of queries can be easily appended by adding more virtual functions
-that return string values to teh interface and by reimplementing the function
+that return string values to the interface and by reimplementing the function
 that links the queries with corresponding functions.
 
 \section{Conditions}\label{sec:conditions}
@@ -126,7 +127,8 @@ with values from the program being verified, and a list of expected results.
 There are basically two types of these conditions:
 \begin{itemize}
  \item conditions that check whether a flag is set to the given value, i.e. the
- query is the name of the flag, and
+ query is the name of the flag and the list of expected results contains the
+ given value,
  \item conditions that check answers of plugins to given queries.
 \end{itemize}
 Answers of plugins are now not limited only to \emph{true} or \emph{false} but
@@ -255,6 +257,10 @@ rules on a module loaded from the given LLVM program.
 
 \todo{say something about parsing the rules?}
 
+First, the rules from the JSON file are parsed and loaded into a corresponding
+structure. If there are some paths to plugins specified, the plugins are
+loaded and the instrumentation part begins.
+
 The instrumentation is implemented to be staged, therefore the first step is to
 process all the phases one after each other in a following way: iterate over
 functions from the loaded module and check rules from the phase being processed
@@ -268,10 +274,11 @@ To process the rule, first of all, the values of operands and return values of
 the matched instructions that are noted by the rule to be saved are stored to
 given variables. If the fields \texttt{getSizeTo} or \texttt{getPointerInfoTo}
 are present, the demanded information is stored to the given variables. Then
-all conditions are checked. If they are satisfied, the rule is ready to be
-applied. The new \texttt{call} instruction that is to be inserted is created
-according to \texttt{newInstruction} field and injected before or after the
-matched sequence of instructionaccording to \texttt{where} field.
+all conditions are checked as described in Section~\ref{sec:conditions}. If
+they are satisfied, the rule is ready to be applied. The new \texttt{call}
+instruction that is to be inserted is created according to
+\texttt{newInstruction} field and injected before or after the matched sequence
+of instructionaccording to \texttt{where} field.
 
 Since the parameters of the callee function might be of different types than
 values that are passed as these parameters, we might need to convert them
@@ -317,4 +324,20 @@ a variable \texttt{<t2>}. Plugins are asked whether the given condition
 positive, new call of a function \texttt{\_\_INSTR\_remember\_global} with
 arguments \texttt{<t1>} and \texttt{<t2>} is inserted at the beginning of
 \emph{main}.
+
+\section{Logging}
+
+To sum up the instrumentation process for a concrete file, each operation is
+logged with a logger. The logger notes following operations:
+\begin{itemize}
+  \item parsing configuration
+  \item loading plugins (also lists the names of the loaded plugins)
+  \item the beginning and end of each phase
+  \item rule application and instruction insertion
+\end{itemize}
+The logger also logs errors such as error when parsing configuration, invalid
+path to a plugin, unsupported instruction insertion, instrumentation of a
+non-existing function, error when inserting a new instruction, etc. Logs can be
+found in \emph{log.txt} file that is generated at the end of the
+instrumentation process.
 
