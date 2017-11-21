@@ -56,8 +56,11 @@
     TeXkeywords   = {instrumentation, verification, static analysis, LLVM, \ldots},
     abstract      = {This is the abstract of my thesis, which can span multiple paragraphs.},
     thanks        = {These are the acknowledgements for my thesis, which can span multiple paragraphs.},
-  %%  bib           = example.bib
 }
+
+\usepackage[backend=biber]{biblatex}
+\addbibresource{references.bib}
+
 \usepackage{makeidx}      %% The `makeidx` package contains
 \makeindex                %% helper commands for index typesetting.
 %% These additional packages are used within the document:
@@ -122,6 +125,9 @@
 \input{chapters/05_memsafety.tex}
 
 \chapter{Evaluation}\label{chap:eval}
+
+\chapter{Bibliography}
+\printbibliography
 
 \appendix %% Start the appendices.
 \chapter{An appendix}

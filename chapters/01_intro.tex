@@ -26,20 +26,21 @@ use-after-free-error.
 
 The new tool is implemented to be self-standing, which means it can be
 incorporated in any tool that performs the actual analysis on instrumented
-program. We employed the instrumentation in \symbiotic which is an open-source
-tool for static analysis of sequential programs in LLVM. It uses three
-techniques for static analysis: instrumentation, program slicing and symbolic
-execution. Instrumentation in \symbiotic is used to reduce the problem of
-checking some property violations (e.g. checking for NULL pointer dereference)
-to a reachability problem. In other words, a given program is instrumented such
-that the original program violates the property if and only if some error
-location is reachable in the instrumented program. Program slicing is a
-technique that removes a code that is not relevant for the reachability of
-error locations, therefore the actual analysis is performed on a smaller amount
-of code and is consequently faster. The sliced program is passed to a symbolic
-executor that goes through every possible path of a program (if the program
-terminates) because it uses symbolic values of variables instead of the real
-values and looks whether some error location is reachable.
+program. We employed the instrumentation in \symbiotic~\cite{Symbiotic} which
+is an open-source tool for static analysis of sequential programs in LLVM. It
+uses three techniques for static analysis: instrumentation, program slicing and
+symbolic execution. Instrumentation in \symbiotic is used to reduce the problem
+of checking some property violations (e.g. checking for NULL pointer
+dereference) to a reachability problem. In other words, a given program is
+instrumented such that the original program violates the property if and only
+if some error location is reachable in the instrumented program. Program
+    slicing is a technique that removes a code that is not relevant for the
+    reachability of error locations, therefore the actual analysis is performed
+    on a smaller amount of code and is consequently faster. The sliced program
+    is passed to a symbolic executor that goes through every possible path of a
+    program (if the program terminates) because it uses symbolic values of
+    variables instead of the real values and looks whether some error location
+    is reachable.
 
 
 Chapter~\ref{chap:tools} lists the existing tools for instrumenting LLVM IR and
