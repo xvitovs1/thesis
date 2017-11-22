@@ -17,7 +17,7 @@
            %% hide the List of Figures.
   lot,     %% Prints the List of Tables. Replace with `nolot` to
            %% hide the List of Tables.
-  nocoveri
+  nocover
   %% More options are listed in the user guide at
   %% <http://mirrors.ctan.org/macros/latex/contrib/fithesis/guide/mu/fi.pdf>.
 ]{fithesis3}
@@ -103,14 +103,7 @@
 
 \begin{document}
 \chapter{Introduction}
-\addcontentsline{toc}{chapter}{Introduction}
 \input{chapters/01_intro}
-
-  \makeatletter\thesis@blocks@clear\makeatother
-  \phantomsection %% Print the index and insert it into the
-  \addcontentsline{toc}{chapter}{\indexname} %% table of contents.
-  \printindex
-
 
 \chapter{LLVM}\label{chap:llvm}
 \input{chapters/02_llvm.tex}
@@ -126,7 +119,7 @@
 
 \chapter{Evaluation}\label{chap:eval}
 
-\chapter{Bibliography}
+\addcontentsline{toc}{chapter}{Bibliography}
 \printbibliography
 
 \appendix %% Start the appendices.
