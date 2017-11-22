@@ -26,10 +26,13 @@ parts:
 
 The framework provides the user with API that adds several functions and macros
 that are useful for the instrumentation, for example a function
-\texttt{INS\_InsertCall} that adds a call to an analysis function. However,
-although the LLVMPin framework is one of the instrumentation tools that are
-general and configurable, it does not simplify the work for the user in terms
-of writing a code that performs the core of the instrumentation process.
+\texttt{INS\_InsertCall} that adds a call to an analysis function. However, a
+user still has to implement the \texttt{INSTRUMENT} routine to describe how to
+instrument the code, including the loops that iterate over functions and
+instructions of the given LLVM code. To summarize, although the LLVMPin
+framework is one of the instrumentation tools that are general and
+configurable, it does not simplify the work for the user in terms of writing a
+code that performs the core of the instrumentation process.
 
 \section{Other Tools}
 
@@ -60,8 +63,14 @@ checks at compile-time. Moreover, it uses static analysis to minimize the
 number of inserted run-time checks.
 
 Another tool that uses instrumentation to check memory safety properties is
-Map2Check. Like Symbiotic, it uses KLEE as symbolic executor. \todo{describe
-later from their paper}
+Map2Check~\cite{map2check}. It was inspired by \symbiotic and it inserts
+functions that track allocated memory and operations on pointers with
+assertions that check whether some property was violated in a similar way as we
+describe in~\ref{sec:basic}. Moreover, it also inserts assertions that check
+integer overflows after arithmetic operations. Currently, it does not use any
+static analysis to reduce the number of inserted checks. Like \symbiotic, it
+uses \klee~\cite{klee} as symbolic executor to check reachability of error
+locations.
 
 Loom is an LLVM library for instrumentation that enables to insert lines of
 code that expose values of LLVM instruction (e.g. return values of function
