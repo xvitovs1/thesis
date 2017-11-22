@@ -84,9 +84,8 @@ Currently, following queries are available \todo{apply refactoring}:
   length \texttt{len} valid operation?
   \item[hasKnownSize(block)] Can we statically determine the size of the
   \texttt{block} that is being dereferenced?
-  \item[pointsTo(p,a)] Does a pointer \texttt{p} point to a value \texttt{a}?
-  \item[isNull(p)] Does the given pointer \texttt{p} point to a \emph{null}
-  value?
+  \item[pointsTo(p,a)] Does the given pointer \texttt{p} point to the value \texttt{a}?
+  \item[isNull(p)] Does the given pointer \texttt{p} point to NULL?
 \end{description}
 There are three possible answers for these queries:
 \emph{"true"}, \emph{"unknown"} and \emph{"false"}. The default answer for all
