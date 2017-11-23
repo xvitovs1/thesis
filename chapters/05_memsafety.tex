@@ -75,23 +75,24 @@ and only if some of these asserts can be violated, i.e.~if an error
 location is reachable.
 
 Calls to the hitherto described functions are inserted into the analyzed
-program to keep track of the state of the memory.  For each global variable,
+program to keep track of the state of the memory. For each global variable,
 the instrumentation inserts an \texttt{\_\_INSTR\_remember\_global} call to the
 beginning of \emph{main} in order to create the corresponding record. Further,
 the instrumentation detects memory handling instructions in the code and
 inserts calls to the corresponding \texttt{\_\_INSTR\_*} functions above or
 below these instructions. When instrumenting a memory allocation instruction
-(e.g. \texttt{alloca}), we insert the call of \texttt{\_\_INSTR\_remember} (for
-allocations on the stack) or \texttt{\_\_INSTR\_remember\_malloc} (for
-allocations on the heap) \emph{below} the allocation instruction as the called
-function needs the address of the allocated block. In all remaining cases, the
-calls are inserted \emph{above} the corresponding instruction as we want to
-detect a memory handling error before the program reaches the actual error.
-Calls of \texttt{\_\_INSTR\_set\_flag} are instrumented at the beginnings of
-all functions and calls of \texttt{\_\_INSTR\_destroy\_allocas} are
-instrumented \emph{above} all return instructions in each function. Finally, a
-call to \texttt{\_\_INSTR\_check\_leaks()} is inserted at the end of
-\emph{main} to check for memory leaks.
+(e.g. \texttt{alloca}), we insert the call of \texttt{\_\_INSTR\_remember}
+function (for allocations on the stack) or the call of
+\texttt{\_\_INSTR\_remember\_malloc} function (for allocations on the heap)
+\emph{below} the allocation instruction as the called function needs the
+address of the allocated block. In all remaining cases, the calls are inserted
+\emph{above} the corresponding instruction as we want to detect a memory
+handling error before the program reaches the actual error.  Calls of
+\texttt{\_\_INSTR\_set\_flag} are instrumented at the beginnings of all
+functions and calls of \texttt{\_\_INSTR\_destroy\_allocas} are instrumented
+\emph{above} all return instructions in each function. Finally, a call to
+\texttt{\_\_INSTR\_check\_leaks()} is inserted at the end of \emph{main} to
+check for memory leaks.
 
 \lstset{escapeinside={<@}{@>}, columns=fullflexible, basicstyle=\ttfamily, language=llvm, style=nasm}
 \begin{figure}[t]
@@ -275,32 +276,32 @@ program as possibly invalidated (freed).
 
 % The predicate that is of a great importance for checking memory
 % safety is \emph{mayBeInvalidPointer(addr, len)}.
-The query that we use for checking memory safety is
-\texttt{mayBeInvalidPointer(addr, len)}. \todo{rewrite this when conditions are updated} Satisfiability of this
-query is determined through the extended pointer
-analysis, which returns that this query holds if dereferencing
-\texttt{len} bytes starting from the address given in \texttt{addr}
-argument may be unsafe or when the analysis does not have enough
-information to refute the validity of the predicate.  The reader could
-notice that we do not pass the location in the program to the
+For checking memory safety we use the \texttt{isValidPointer(addr, len)} query
+with expected result \emph{"false"} or \emph{"unknown"}. Satisfiability of this
+condition is determined through the extended pointer analysis, which returns
+the expected results if dereferencing \texttt{len} bytes starting from the
+address given in \texttt{addr} argument may be unsafe or when the analysis does
+not have enough information to refute the validity of the predicate.  The
+reader could notice that we do not pass the location in the program to the
 predicate even though we claimed that the extended pointer analysis is
 flow-sensitive. This is because \llvm that we use as the intermediate
-representation is in partial-SSA form~\cite{Lattner04}, so the pointer
-analysis can infer the location from the \texttt{addr} variable.
+representation is in partial-SSA form~\cite{Lattner04}, so the pointer analysis
+can infer the location from the \texttt{addr} variable.
 %\todo{Here we use that fact that LLVM is in partial-SSA, otherwise we must pass also location
 %in the program to that predicate...}
 
-We added the condition \texttt{mayBeInvalidPointer(addr, len)} to every rule
-that instruments reading or writing from/to memory (where \texttt{addr} is the
-address used to access the memory and \texttt{len} is the number of
-read/written bytes). In Figure~\ref{fig:examplepta}, an array of ten integers
-is allocated on line 1 and the pointer is stored to the \stacklist on line 3.
-When the instrumentation tries to instrument the \texttt{store} instruction on
-line 6, the pointer analysis replies \emph{false} to the query
-\texttt{mayBeInvalidPointer(\%3, 4)}, as it knows that the dereference is
-always safe. Therefore, this \texttt{store} is not instrumented. However, when
+We added the condition \texttt{isValidPointer(addr, len)} with expected results
+\emph{"false"} or \emph{"unknown"} to every rule that instruments reading or
+writing from/to memory (where \texttt{addr} is the address used to access the
+memory and \texttt{len} is the number of read/written bytes). In
+Figure~\ref{fig:examplepta}, an array of ten integers is allocated on line 1
+and the pointer is stored to the \stacklist on line 3.  When the
+instrumentation tries to instrument the \texttt{store} instruction on line 6,
+the pointer analysis replies \emph{"true"} to the query
+\texttt{isValidPointer(\%3, 4)}, as it knows that the dereference is always
+safe. Therefore, this \texttt{store} is not instrumented. However, when
 checking this query for the \texttt{store} instruction on line 11, the extended
-pointer analysis returns \emph{true}, as \texttt{\%4} tries to access the
+pointer analysis returns \emph{"false"}, as \texttt{\%4} tries to access the
 twentieth element of the array of length 10. A check hence needs to be inserted
 above this \texttt{store} instruction.
 
