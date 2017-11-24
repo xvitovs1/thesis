@@ -152,11 +152,11 @@ of expected results for queries that expect accurate answer can contain just
 The JSON file contains following fields:
 
 \medskip
-\begin{itemize}
-\item \texttt{file:} Path to a a file with definitions of instrumentation functions.
-\item \texttt{analyses:} List of paths to analyses plugins.
-\item \texttt{flags:} List of flags that can be set during instrumentation.
-\item \texttt{phases:} List of instrumentation phases. Each phase contains a
+\begin{description}
+\item[\texttt{file}] Path to a a file with definitions of instrumentation functions.
+\item[\texttt{analyses}] List of paths to analyses plugins.
+\item[\texttt{flags}] List of flags that can be set during instrumentation.
+\item[\texttt{phases}] List of instrumentation phases. Each phase contains a
   list of \texttt{instructionRules}. Each rule is described with several fields:
   \begin{itemize}
     \item \texttt{findInstructions}: Sequence of instructions we are searching
@@ -206,7 +206,7 @@ The JSON file contains following fields:
     auxiliary list for later use if the rule is applied. This field is optional.
 
   \end{itemize}
-\item \texttt{globalVariablesRule:} A rule for instrumenting global
+\item[\texttt{globalVariablesRule}] A rule for instrumenting global
   variables. The rule is described with several fields:
   \begin{itemize}
     \item \texttt{findGlobals:} Contains one mandatory field
@@ -220,7 +220,7 @@ The JSON file contains following fields:
 
   \end{itemize}
 
-\end{itemize}
+\end{description}
 
 Variables in the JSON configuration file are enclosed by the '<' and '>'
 characters. These variables can be used to store some values for later use. For
@@ -298,16 +298,16 @@ for global variables is applied. That is, a new instruction is inserted at the
 beginning of the function given in \texttt{in} field if conditions are
 satisfied.
 
-\todo{make this optional} Sometimes the program might contain definitions of
-functions that are never called. Such functions can be optionally omitted from
-the instrumentation process if a plugin for a pointer analysis is available. To
-determine what functions are called, we first need to build a call graph from
-the given program. The pointer analysis is necessary for building this graph
-because functions can be called indirectly through function pointers. Then we
-search the graph with breadth-first search algorithm starting from the node
-that represents the \emph{main} function. All functions (or nodes precisely)
-that were visited during the search are marked as reachable. All the other
-functions were never called and are not instrumented.
+Sometimes the program might contain definitions of functions that are never
+called. Such functions can be omitted from the instrumentation process if a
+plugin for a pointer analysis is available. To determine what functions are
+called, we first need to build a call graph from the given program. The pointer
+analysis is necessary for building this graph because functions can be called
+indirectly through function pointers. Then we search the graph with
+breadth-first search algorithm starting from the node that represents the
+\emph{main} function. All functions (or nodes precisely) that were visited
+during the search are marked as reachable. All the other functions were never
+called and are not instrumented.
 
 \todo{describe cloning metadata?}
 
