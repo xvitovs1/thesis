@@ -189,15 +189,15 @@ r = NULL;
 p = malloc(4);
 <@\vdots@>
 <@{\color{blue} // r may point to NULL or p}@>
-<@{\color[RGB]{0, 135,0} // r may point to NULL or p}@>
+<@{\color[RGB]{0, 135,0} // r may point to p}@>
 r = p;
 <@\vdots@>
 <@{\color{blue} // r may point to NULL or p}@>
-<@{\color[RGB]{0, 135,0} // r may point to NULL or p }@><@{\color{red} or is invalidated}@>
+<@{\color[RGB]{0, 135,0} // r may point to p }@><@{\color{red} or is invalidated}@>
 free(p);
 <@\vdots@>
 <@{\color{blue} // r may point to NULL or p}@>
-<@{\color[RGB]{0, 135,0} // r may point to NULL or p }@><@{\color{red} or is invalidated}@>
+<@{\color[RGB]{0, 135,0} // r may point to p }@><@{\color{red} or is invalidated}@>
 *r = 1;
 \end{lstlisting}
 \caption{The difference between \emph{flow-insensitive} (blue), \emph{flow-sensitive} (green) pointer analysis and \emph{extended flow-sensitive} pointer analysis (green and red). For the sake of simplicity, the code is in C and not LLVM.}
