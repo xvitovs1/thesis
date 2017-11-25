@@ -399,16 +399,15 @@ store i32 1, i32* %2, align 16
 \label{fig:check_bounds_example}
 \end{figure}
 
-The following extension is not directly bound to the stages, but it
-can amplify the positive effect of staged instrumentation and
-therefore we present it in this section. Let us assume that there is
-an instruction that may possibly perform an unsafe dereference
-(i.e.~the \texttt{mayBeInvalidDereference} predicate was determined to
-hold and thus a check has to be inserted). In some cases, we can
-statically find the address and the size of the memory block that is
-being dereferenced and therefore we do not need to look for the
-corresponding record in the list during run-time. The cases where we
-can do this must meet these conditions:
+The following extension is not directly bound to the stages, but it can amplify
+the positive effect of staged instrumentation and therefore we present it in
+this section. Let us assume that there is an instruction that may possibly
+perform an unsafe dereference (i.e.~the answer to \texttt{isValidDereference}
+query was \emph{"false"} or \emph{"unknown"} and thus a check has to be
+inserted). In some cases, we can statically find the address and the size of
+the memory block that is being dereferenced and therefore we do not need to
+look for the corresponding record in the list during run-time. The cases where
+we can do this must meet these conditions:
 \begin{itemize}
 \item the pointer analysis must give us a single memory location where the
 dereferenced pointer must point
@@ -416,23 +415,23 @@ dereferenced pointer must point
 \item the size of this memory location is constant
 \end{itemize}
 
-We query the pointer analysis in a similar way as in
-Section~\ref{sec:pta} to get this information.  If the requirements
-are not satisfied, the dereference must be instrumented with the usual
+We query the pointer analysis with a query \texttt{hasKnownSize(memory\_block)}
+to get this information.  If the answer is \emph{"false"} or \emph{"unknown"},
+the dereference must be instrumented with the usual
 \texttt{\_\_INSTR\_check\_pointer}. Otherwise, a call to a
-\texttt{\_\_INSTR\_check\_bounds} function is be
-inserted. \texttt{\_\_INSTR\_check\_bounds} function takes four
-arguments: the address and the size of the dereferenced memory block
-(provided by the pointer analysis), the pointer that is being
-dereferenced, and the number of dereferenced bytes.  This information
-is sufficient to decide whether an out-of-bound error occurs.  The
-last requirement demands that the size of the memory location is
-constant, thus known at the compile time (and, consequently, known by
-the pointer analysis).  This is to avoid the cases where the size
-parameter used when allocating the memory may change between the
-allocation and the inserted checks.  There are definitely cases where
-this optimized instrumentation could be used with variable size
-parameter too, but they are a subject of further research.
+\texttt{\_\_INSTR\_check\_bounds} function is to be inserted.
+\texttt{\_\_INSTR\_check\_bounds} function takes four arguments: the address
+and the size of the dereferenced memory block (provided by the pointer analysis
+through \texttt{getPointerInfoTo} field in a JSON configuration file as
+described in~\ref{sec:config}), the pointer that is being dereferenced, and
+the number of dereferenced bytes.  This information is sufficient to decide
+whether an out-of-bound error occurs.  The last requirement demands that the
+size of the memory location is constant, thus known at the compile time (and,
+consequently, known by the pointer analysis).  This is to avoid the cases where
+the size parameter used when allocating the memory may change between the
+allocation and the inserted checks.  There are definitely cases where this
+optimized instrumentation could be used with variable size parameter too, but
+they are a subject of further research.
 
 An example of a constant-time check can be found in
 Figure~\ref{fig:check_bounds_example}. On line 6 where the array of ten
