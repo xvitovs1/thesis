@@ -2,13 +2,13 @@ LLVM~\cite{llvm} is an open source project that provides compiler technologies
 designed to be independent of a target architecture. It uses LLVM IR as an
 intermediate representation code. It can be used in three different forms:
 human readable representation, bitcode representation and an in-memory compiler
-IR. From this point we will take only the human readable form into
+IR. From this point on we will take only the human readable form into
 consideration for the sake of simplicity.
 
 \begin{figure}[h]
  \lstinputlisting[language=llvm,style=nasm]{examples/llvm.ll}
- \caption{Example of an LLVM module with function \texttt{main} that calls
- \texttt{foo} function which allocates an array of ten integers and stores
+ \caption{An example of an LLVM module with function \texttt{main} that calls
+ function \texttt{foo} which allocates an array of ten integers and stores
  \texttt{number} in the first field of the array.}
  \label{fig:llvm_example}
 \end{figure}
@@ -17,95 +17,117 @@ consideration for the sake of simplicity.
 
 The high-level structure of an LLVM program consists of modules, which are
 units created when a program is translated. More modules can be linked together
-with the LLVM linker. These units contain global variables and functions.
+into one module with the LLVM linker. These units contain global variables and
+functions.
 
 Each function begins with a \texttt{define} keyword and is composed of basic
 blocks. Basic blocks are sequences of instructions and have a single entry node
 and a single exit node, i.e. there is no branching in a basic block. They form
-a control flow graph for a function. In figure~\ref{fig:llvm_example} we give
+a control flow graph for a function. In Figure~\ref{fig:llvm_example} we give
 an example of an LLVM module with two function definitions, each containing one
 basic block.
 
-LLVM is in SSA form~\cite{ssa} (static single assignment form), which means that each
-variable can be assigned only once and must be defined before its use. It uses:
+LLVM is in static single assignment form~\cite{ssa} (SSA form), which means that each
+variable can be assigned only at one location in teh code. It uses:
 
 \begin{itemize}
     \item global identifiers that begin with the '@' character for functions
     and global variables, for example global variable \texttt{@number} in
-    figure~\ref{fig:llvm_example}, and
+    Figure~\ref{fig:llvm_example}, and
     \item local identifiers that begin with the '\%' character for register
     names and types, for example a local variable \texttt{\%a} in
-    figure~\ref{fig:llvm_example}.
+    Figure~\ref{fig:llvm_example}.
 \end{itemize}
 
 Both kinds of identifiers can be named or unnamed, unnamed identifiers are
 represented as unsigned numeric values (e.g. local identifier \texttt{\%1} in
-figure~\ref{fig:llvm_example}).
+Figure~\ref{fig:llvm_example}).
 
 \section{LLVM types}
 
-LLVM is a strongly typed language, i.e. all values and variables are typed.
-There are simple types such as integer type (e.g. \texttt{i32} for a 32-bit
-integer), floating point types (e.g. \texttt{float} or \texttt{double}) and
-pointer type (e.g. \texttt{i32*} for a pointer to a 32-bit integer), and also
-types for vectors (e.g. \texttt{<10 x i32>} for a vector of ten 32-bit
-integers), arrays (e.g. \texttt{[10 x i32]} for an array of ten 32-bit integers)
-and structures (e.g. \texttt{\{i32, i32\}} for a pair of 32-bit integers). For
-example, in figure~\ref{fig:llvm_example} we can see that global variable
-\texttt{number} is a 32-bit integer and \texttt{a} is an array of ten
-32-bit integers.
+LLVM is a strongly typed language. There are simple types such as integer type
+(e.g. \texttt{i32} for a 32-bit integer), floating point types (e.g.
+\texttt{float} or \texttt{double}) and pointer type (e.g. \texttt{i32*} for a
+pointer to a 32-bit integer), and also types for vectors (e.g. \texttt{<10 x
+i32>} for a vector of ten 32-bit integers), arrays (e.g. \texttt{[10 x i32]}
+for an array of ten 32-bit integers) and structures (e.g. \texttt{\{i32, i32\}}
+for a pair of 32-bit integers). Observe that in Figure~\ref{fig:llvm_example}
+the global variable \texttt{number} is a 32-bit integer and
+\texttt{a} is an array of ten 32-bit integers.
 
 \section{Basic instructions}
 
 There are five classes of LLVM instructions: terminator instructions, binary
 instructions, bitwise binary instructions, memory instructions and other
-instructions.
+instructions. \todo{In this section, we describe the most important
+instructions for this work. The complete list of instructions can be found in
+LLVM documentation\footnote{\url{https://llvm.org/docs/LangRef.html}}.}
 
 A terminator instruction is used as the last instruction of each basic block
-and it determines which block will follow after the current one. For our
-purposes we will describe only two of the terminator instructions: \texttt{ret}
-and \texttt{br}.
+and it determines how the control flow will continue. For our purpose we will
+describe only two of the terminator instructions: \texttt{ret} and \texttt{br}.
 
-\texttt{ret} instruction is used to return from a function to a basic block
+\begin{description}
+\item[\texttt{ret}] is used to return from a function to a basic block
 from which the function was called. It has one optional argument that represent
-a return value of a function. In figure~\ref{fig:llvm_example} we can see the
+a return value of a function. In Figure~\ref{fig:llvm_example} we can see the
 two variants of this instruction: in function \texttt{foo}, there is a
 \texttt{ret void} instruction, because this function does not return any value,
 whereas function \texttt{main} returns 0 (\texttt{ret i32 0}).
 
-\texttt{br} instruction determines which basic block from the current function
-will follow. It represents either conditional branching \texttt{br i1
-<condition>, label <true-branch>, label <false-branch>} transfering the control
-flow to \texttt{true-branch} block if the \texttt{condition} holds and to
-\texttt{false-branch} block otherwise, or uncoditional branching \texttt{br
-label <b>} transfering the control flow to a block \texttt{b} unconditionally.
+\item[\texttt{br}] determines which basic block from the current function
+will follow. It represents either conditional branching:
+
+\texttt{br i1 <condition>, label <true>, label <false>},
+
+transfering the control flow to \texttt{true} block if the \texttt{condition} holds and to
+\texttt{false} block otherwise, or uncoditional branching:
+
+\texttt{br label <b>},
+
+transfering the control flow to the block \texttt{b} unconditionally.
+\end{description}
 
 Binary operator instructions have two operands of the same type and return a
 result of an operation on these operands, for example \texttt{add} instruction
 for addition or \texttt{sub} instruction for subtraction. There are usually two
 versions of these instructions: one for integer values and one for floating
-point values. These instructions together with bitwise binary instructions
-that are used for bitwise operations are not relevant for this work.
+point values.
+
+Bitwise binary instructions are used for bitwise operations. This category
+contains for example bitwise logical operators like \texttt{and} instruction,
+\texttt{or} instruction, etc.
 
 The two most important instructions for working with memory are \texttt{load}
-and \texttt{store}. \texttt{load} instruction is used to read from memory
-specified by its operand, whether \texttt{store} is used to write to memory and
-has two operands: a value to store and address of a target memory. We can see
-the usage of \texttt{load} and \texttt{store} in figure~\ref{fig:llvm_example}
-in function \texttt{foo} where a value of global variable \texttt{number} is
-read, marked as \texttt{\%1} and later stored to \texttt{\%2}. Another
-instruction relevant for our work is \texttt{alloca} instruction for allocating
-memory on the stack. In figure~\ref{fig:llvm_example}, in function \texttt{foo}
-\texttt{alloca} instruction is used to allocate \texttt{a} as an array of ten
-32-bit integers on the stack. Instruction \texttt{getelementptr} gets the
-address of some element of an aggregate data structure, for example in
-figure~\ref{fig:llvm_example} in function \texttt{foo} it gets the address of
+and \texttt{store}:
+\begin{description}
+\item[\texttt{load}] is used to read from memory specified by its operand,
+\item[\texttt{store}] is used to write to memory and has two operands: a value
+to store and address of a target memory.
+\end{description}
+We can see the usage of \texttt{load} and \texttt{store} in
+Figure~\ref{fig:llvm_example} in function \texttt{foo} where a value of global
+variable \texttt{number} is read, named as \texttt{\%1} and later stored to
+\texttt{\%2}. Another instruction important for our work is \texttt{alloca}
+instruction:
+\begin{description}
+\item[\texttt{alloca}] allocates memory on the stack.
+\end{description}
+In Figure~\ref{fig:llvm_example} \texttt{alloca} instruction is used to
+allocate \texttt{a} as an array of ten 32-bit integers on the stack in function
+\texttt{foo}. Instruction \texttt{getelementptr} gets the address of some
+element of an aggregate data structure, for example in
+Figure~\ref{fig:llvm_example} in function \texttt{foo} it gets the address of
 the fifth element of array \texttt{a}.
 
 Other relevant instructions are \texttt{call} instruction and \texttt{bitcast}
-instruction. \texttt{call} instruction calls calls a function given as its
-operand together with function's arguments. We can find an example of a
-\texttt{call} instruction in figure~\ref{fig:llvm_example} in function
-\texttt{main} which calls function \texttt{foo} on line~15. \texttt{bitcast}
-instruction converts given value to a given type, e.g.~\texttt{bitcast i8 1 to
+instruction:
+\begin{description}
+\item[\texttt{call}] instruction calls a function given as its
+operand together with function's arguments,
+\item[\texttt{bitcast}] converts a given value to a given type, e.g.~\texttt{bitcast i8 1 to
 i32} converts 8-bit integer of value 1 to 32-bit integer of value 1.
+\end{description}
+ We can find an example of a \texttt{call} instruction in
+ Figure~\ref{fig:llvm_example} in function \texttt{main} which calls function
+ \texttt{foo} on line~15.
