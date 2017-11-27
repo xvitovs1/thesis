@@ -21,8 +21,8 @@ into one module with the LLVM linker. These units contain global variables and
 functions.
 
 Each function begins with a \texttt{define} keyword and is composed of basic
-blocks. Basic blocks are sequences of instructions and have a single entry node
-and a single exit node, i.e. there is no branching in a basic block. They form
+blocks. Basic blocks are sequences of instructions, they have a single entry node
+and a single exit node and there is no branching in them. They form
 a control flow graph for a function. In Figure~\ref{fig:llvm_example} we give
 an example of an LLVM module with two function definitions, each containing one
 basic block.

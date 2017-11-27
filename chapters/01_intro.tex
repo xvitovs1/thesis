@@ -14,7 +14,9 @@ instrumentation. Instrumenting a program means inserting a new code into an
 existing code in order to gather information relevant for program analysis. The
 new code usually does not change the behaviour of the program. Instrumentation
 is for example used in profilers which insert instructions for gathering
-information about time or memory consumption. \todo{Add another example}
+information about time or memory consumption. It is also used by many tools
+that check memory safety of programs as it is possible to track the state of
+the memory with the inserted code.
 
 The aim of this thesis is to present an overview of existing tools for
 instrumentation of LLVM IR bitcode and to design a new tool for
@@ -63,4 +65,4 @@ SV-COMP~\footnote{\url{https://sv-comp.sosy-lab.org/2017/benchmarks.php}}.
 
 Chapter~\ref{chap:conclusion} is a conclusion of this thesis.
 
-\todo{future work, conclusion}
+\todo{future work}
