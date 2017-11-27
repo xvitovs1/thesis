@@ -29,10 +29,12 @@ that are useful for the instrumentation, for example a function
 \texttt{INS\_InsertCall} that adds a call to an analysis function. However, a
 user still has to implement the \texttt{INSTRUMENT} routine to describe how to
 instrument the code, including the loops that iterate over functions and
-instructions of the given LLVM code. To summarize, although the LLVMPin
-framework is one of the instrumentation tools that are general and
-configurable, it does not simplify the work for the user in terms of writing a
-code that performs the core of the instrumentation process.
+instructions of the given LLVM code.
+
+To summarize, the LLVMPin framework is one of a few instrumentation tools for
+LLVM IR that are general and configurable, but it does not simplify the work
+for the user in terms of writing a code that performs the core of the
+instrumentation process.
 
 \section{Other Tools}
 
@@ -52,10 +54,10 @@ about each memory access and checks whether the access takes part in a race.
 UndefinedBehaviourSanitizer offers undefined behaviour detection (e.g. integer
 overflows) by instrumenting all operations that may lead to undefined behaviour
 with a check. All these sanitizers modify the code during compilation and
-insert run-time checks. Disadvantage is slowdown and memory overhead these tool
+insert run-time checks. Disadvantage is a slowdown and memory overhead these tool
 introduce.
 
-SAFECode~\cite{safecode} (Static Analysis For safe Execution of Code) is a tool
+SAFECode~\cite{safecode} (Static Analysis For safe Execution of Code) is a~tool
 developed at University of Illinois that checks memory safety properties, such
 as accessing valid memory locations, out-of-bounds accesses, invalid frees and
 detection of dangling pointers. Like Clang sanitizers it inserts run-time
