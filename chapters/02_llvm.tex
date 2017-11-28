@@ -1,9 +1,13 @@
 LLVM~\cite{llvm} is an open source project that provides compiler technologies
-designed to be independent of a target architecture. It uses LLVM IR as an
-intermediate representation code. It can be used in three different forms:
-human readable representation, bitcode representation and an in-memory compiler
-IR. From this point on we will take only the human readable form into
-consideration for the sake of simplicity.
+designed to be independent of a target architecture. The project has several
+parts: LLVM intermediate representation (LLVM IR, often shorten to LLVM) for
+representation of a source code by the compiler, LLVM Core libraries for code
+generation, optimization and transformation, and tools such as Clang compiler,
+LLVM linker \texttt{llvm-link} or LLVM optimizer \texttt{opt}. In this Chapter,
+we focus on LLVM IR which can be used in three different forms: human readable
+representation, bitcode representation and an in-memory compiler IR. For the
+sake of simplicity, we will take only the human readable form into
+consideration and we will refer to it as LLVM from this point on.
 
 \begin{figure}[h]
  \lstinputlisting[language=llvm,style=nasm]{examples/llvm.ll}
@@ -59,9 +63,9 @@ the global variable \texttt{number} is a 32-bit integer and
 
 There are five classes of LLVM instructions: terminator instructions, binary
 instructions, bitwise binary instructions, memory instructions and other
-instructions. \todo{In this section, we describe the most important
-instructions for this work. The complete list of instructions can be found in
-LLVM documentation\footnote{\url{https://llvm.org/docs/LangRef.html}}.}
+instructions. In this section, we describe the most important instructions for
+this work. The complete list of instructions can be found in LLVM
+documentation\footnote{\url{https://llvm.org/docs/LangRef.html}}.
 
 A terminator instruction is used as the last instruction of each basic block
 and it determines how the control flow will continue. For our purpose we will
