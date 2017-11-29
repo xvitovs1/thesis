@@ -150,16 +150,27 @@ of expected results for queries that expect accurate answer can contain just
 }
 
 The JSON file contains following fields:
+\begin{center}
+\begin{tabular}[h]{>{\bfseries}p{4.2cm} | p{7.8cm}}
+  \texttt{file}                & Path to a a file with definitions of instrumentation functions. \\
+  \hline
+  \texttt{analyses}            & List of paths to analyses plugins. \\
+  \hline
+  \texttt{flags}               & List of flags that can be set during instrumentation. \\
+  \hline
+  \texttt{phases}              & List of instrumentation phases. Each phase contains a
+                                 list of \texttt{instructionRules}. \\
+  \hline
+  \texttt{globalVariablesRule} & A rule for instrumenting global
+                                 variables.
 
-\medskip
+\end{tabular}
+\end{center}
+
+Each element of \texttt{instructionRules} is an JSON object described with
+several fields:
 \begin{description}
-\item[\texttt{file}] Path to a a file with definitions of instrumentation functions.
-\item[\texttt{analyses}] List of paths to analyses plugins.
-\item[\texttt{flags}] List of flags that can be set during instrumentation.
-\item[\texttt{phases}] List of instrumentation phases. Each phase contains a
-  list of \texttt{instructionRules}. Each rule is described with several fields:
-  \begin{itemize}
-    \item \texttt{findInstructions}: Sequence of instructions we are searching
+    \item[\texttt{findInstructions}] Sequence of instructions we are searching
     for. For each instruction in the sequence, we need to fill in an
         \texttt{instruction} field, that specifies a name of the instruction,
         \texttt{returnValue} that enables to remember the return value of the
@@ -176,39 +187,40 @@ The JSON file contains following fields:
         the dereferenced pointer points to and corresponding \texttt{alloca}
         instruction. Since we can get this information only from a pointer
         analysis, this field can be used only when the analysis is available as
-        a plugin.
-    \item \texttt{newIstruction:} Instruction that is to be inserted. It
+        a~plugin.
+    \item[\texttt{newIstruction}] A new instruction that is to be inserted. It
     contains two mandatory fields: \texttt{instruction} that specifies a name
     of the new instruction (for now, only \texttt{call} instruction is
     supported), and \texttt{operands} of the instruction. Moreover, it is
     possible to add one optional field \texttt{stripInBoundsOffsets} that
     strips off pointer casts from a given pointer (i.e. returns the value of
     the original pointer).
-    \item \texttt{in:} Name of a function, in which this rule should be
+    \item[\texttt{in}] Name of a function, in which this rule should be
     applied. Can be set to a value "*" meaning that it should be used in all
     functions.
-    \item \texttt{where:} Specifies the location of insertion. It can be:
+    \item[\texttt{where}] Specifies the location of insertion. It can be:
       \texttt{before} or \texttt{after} the found sequence of instructions,
       \texttt{entry} (at the entry point of the given function, \texttt{in}
       cannot be set to "*" in this case) or \texttt{return} (before every
       terminator instruction of the given function, \texttt{in} cannot be set to
       "*" in this case).
-    \item \texttt{conditions:} List of conditions that have to be satisfied
+    \item[\texttt{conditions}] List of conditions that have to be satisfied
     (see section~\ref{sec:conditions}). A condition consists of fields
     \texttt{query} and \texttt{expectedResult}. \texttt{Query} is a list
     where the first element is a name of a condition and other elements are
     parameters passed to the condition, \texttt{expectedResult} is a list of
     expected results of the query.
-    \item \texttt{setFlags:} List of pairs \texttt{<flag, value>} that sets
+    \item[\texttt{setFlags}] List of pairs \texttt{<flag, value>} that sets
       all \texttt{flags} to a corresponding \texttt{value} if the rule was
       applied. This field is optional.
-    \item \texttt{remember:} Specifies, which variable will be remembered in an
+    \item[\texttt{remember}] Specifies, which variable will be remembered in an
     auxiliary list for later use if the rule is applied. This field is optional.
+\end{description}
 
-  \end{itemize}
-\item[\texttt{globalVariablesRule}] A rule for instrumenting global
-  variables. The rule is described with several fields:
-  \begin{itemize}
+\medskip
+
+\noindent A \texttt{globalVariablesRule} is an JSON object with following fields:
+\begin{itemize}
     \item \texttt{findGlobals:} Contains a mandatory field
     \texttt{globalVariable} that stores a value of a global variable to the
     given variable, and an optional field \texttt{getSizeTo} that gets the
@@ -217,10 +229,7 @@ The JSON file contains following fields:
     \item \texttt{in:} Name of a function, at the beginning of which the rule
     should be applied.
     \item \texttt{conditions:} The same as in \texttt{instructionRule}.
-
-  \end{itemize}
-
-\end{description}
+\end{itemize}
 
 Variables in the JSON configuration file are enclosed by the '<' and '>'
 characters. These variables can be used to store some values for later use. For
@@ -256,7 +265,7 @@ rules on a module loaded from the given LLVM program.
 
 \todo{say something about parsing the rules?}
 
-First, the rules from the JSON file are parsed and loaded into a corresponding
+First, the rules from the JSON file are parsed and loaded into a~corresponding
 structure. If there are some paths to plugins specified, the plugins are
 loaded and the instrumentation part begins.
 
@@ -290,7 +299,7 @@ instruction.
 
 If the rule is successfully applied, flags are set according to field
 \texttt{setFlags} (if present). If field \texttt{remember} is defined, the
-given value is store to an auxiliary list and can be used in later phase of
+given value is stored to an auxiliary list and can be used in later phase of
 instrumentation.
 
 At the very end, after each phase from the configuration was processed, a rule
@@ -316,7 +325,7 @@ In figure~\ref{fig:json_example}, we can see an example of an
 \texttt{load} instruction in any function (\texttt{in} is set to "*"), the only
 operands of \texttt{load} is stored to a variable \texttt{<t1>}, size of the
 type that is being load is stored to a variable \texttt{<t2>} and condition
-\texttt{isValidPointer} is checked for all plugins (i.e. a function
+\texttt{isValidPointer} is checked for all plugins (i.e.~a~function
 \texttt{isValidPointer} is called with arguments \texttt{<t1>} and
 \texttt{<t2>} by all plugins). If some plugin answered either \emph{"false"} or
 \emph{"unknown"}, the condition holds and call of a function
