@@ -61,7 +61,7 @@ the safety of memory operations, but they do not modify them:
 % second parameter. A larger parameter is used for instrumentation of
 % functions like \texttt{memset} or \texttt{memcpy}}
 \item \texttt{\_\_INSTR\_check\_leaks()}
-  \\Checks whether all blocks dynamically allocated on the heap have been
+  \\Checks whether all blocks that were dynamically allocated on the heap have been
   freed. In other words, if there is a record in the \heaplist, then we report
   a memory leak.
 \end{itemize}
@@ -363,7 +363,7 @@ auxiliary list by setting the field \texttt{remember} in the config file.
 
 In the second phase, we insert \texttt{\_\_INSTR\_remember*} calls. For every
 memory allocation, we first check whether the underlying memory location has
-been remembered in the first phase. \todo{describe checking} If it has, we
+been remembered in the first phase. \todo{describe checking?} If it has, we
 create a record for this allocation because a check that can use this record
 was inserted in the first stage. Otherwise, this memory allocation is not
 instrumented.
@@ -415,7 +415,7 @@ dereferenced pointer must point
 \item the size of this memory location is constant
 \end{itemize}
 
-We query the pointer analysis with a query \texttt{hasKnownSize(memory\_block)}
+We query the pointer analysis with \texttt{hasKnownSize(memory\_block)}
 to get this information.  If the answer is \emph{"false"} or \emph{"unknown"},
 the dereference must be instrumented with the usual
 \texttt{\_\_INSTR\_check\_pointer}. Otherwise, a call to a

@@ -209,9 +209,9 @@ The JSON file contains following fields:
 \item[\texttt{globalVariablesRule}] A rule for instrumenting global
   variables. The rule is described with several fields:
   \begin{itemize}
-    \item \texttt{findGlobals:} Contains one mandatory field
+    \item \texttt{findGlobals:} Contains a mandatory field
     \texttt{globalVariable} that stores a value of a global variable to the
-    given variable, and one optionall field \texttt{getSizeTo} that gets the
+    given variable, and an optional field \texttt{getSizeTo} that gets the
     size of the type of the global variable.
     \item \texttt{newInstruction:} The same as in \texttt{instructionRule}.
     \item \texttt{in:} Name of a function, at the beginning of which the rule

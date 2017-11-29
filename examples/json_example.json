@@ -8,12 +8,12 @@
     }
   ],
   "newInstruction": {
-     "instruction": "call" ,
-     "operands": ["<t1>", "<t2>", "__INSTR_check_pointer"]
+     "instruction": "call",
+     "operands": ["<t1>","<t2>","__INSTR_check_pointer"]
   },
-  "where": "before",
-  "conditions": [{ "query": ["isValidPointer", "<t1>", "<t2>"],
-                   "expectedResult": ["false", "unknown"] }],
+  "where":"before",
+  "conditions": [{"query":["isValidPointer","<t1>","<t2>"],
+                  "expectedResult":["false","unknown"]}],
   "in": "*",
-  "setFlags": [["loadPresent", "true"]]
+  "setFlags": [["loadPresent","true"]]
 }
