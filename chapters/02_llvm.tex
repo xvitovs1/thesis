@@ -3,7 +3,9 @@ designed to be independent of a target architecture. The project has several
 parts: LLVM intermediate representation (LLVM IR, often shorten to LLVM) for
 representation of a source code, LLVM Core libraries for code generation,
 optimization and transformation, and tools such as Clang compiler, LLVM linker
-\texttt{llvm-link} or LLVM optimizer \texttt{opt}. In this Chapter, we focus on
+\texttt{llvm-link} or LLVM optimizer \texttt{opt}. Another important part of
+LLVM project is LLVM Pass Framework, since LLVM passes are programs used for
+transformations and optimizations of LLVM code. In this Chapter, we focus on
 LLVM IR which can be used in three different forms: human readable
 representation, bitcode representation and an in-memory compiler IR. For the
 sake of simplicity, we will work only with the human readable form as all the

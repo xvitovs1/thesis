@@ -1,35 +1,41 @@
+In this chapter, we list tools that work with instrumentation of LLVM. In the
+first section, we describe a framework for general instrumentation where the
+user is somehow able to control the instrumentation in terms of what
+instructions will be inserted, etc. In the second section, we list the tools
+that use the instrumentation for specified purposes such as checking memory
+safety.
+
 \section{LLVMPin Instrumentation Framework}
 
 LLVMPin~\cite{llvmpin} is a framework that simplifies implementing tools for
-LLVM~IR instrumentation. The framework basically consists of two scripts:
+LLVM~IR instrumentation. First of all, a user has to implement an~LLVMPin tool,
+which is a C++ code that must contain three parts:
 
 \begin{itemize}
-    \item \texttt{llvmpin-gen} runs the LLVMPin tool implemented by
-          user and instruments a given code,
-    \item \texttt{llvmpin} generates a new
-	  bitcode after instrumentation and from the bitcode it produces an
-          executable.
-\end{itemize}
-
-The user has to implement a LLVMPin tool, which is a C++ code that must contain three
-parts:
-
-\begin{itemize}
-    \item \texttt{REQUIRE} routine with a list of existing LLVM
-          passes\footnote{\url{http://llvm.org/docs/WritingAnLLVMPass.html}} required by
-          the LLVMPin tool,
+    \item Analysis part that contains definitions of analysis functions and a
+    routine for analysis setup. Analysis functions are functions that can be
+    inserted into the given code to perform an analysis of the program.
     \item \texttt{INSTRUMENT} routine that inserts calls to analysis functions
-          defined by user,
-    \item analysis part that contains definitions of analysis functions and a
-          routine for analysis setup.
+    defined by user.
+    \item \texttt{REQUIRE} routine with a list of existing LLVM
+    passes\footnote{\url{http://llvm.org/docs/WritingAnLLVMPass.html}} required
+    by the LLVMPin tool.
 \end{itemize}
 
-The framework provides the user with API that adds several functions and macros
+The framework basically consists of two scripts:
+
+\begin{itemize}
+    \item \texttt{llvmpin-gen} compiles the LLVMPin tool,
+    \item \texttt{llvmpin} runs the instrumentation, gerates the new bitcode
+    and from the bitcode it produces an executable.
+\end{itemize}
+
+The framework comes with the API that provides several functions and macros
 that are useful for the instrumentation, for example a function
 \texttt{INS\_InsertCall} that adds a call to an analysis function. However, a
-user still has to implement the \texttt{INSTRUMENT} routine to describe how to
-instrument the code, including the loops that iterate over functions and
-instructions of the given LLVM code.
+user still has to implement the eintire \texttt{INSTRUMENT} routine to describe
+how to instrument the code, including the procedure that searches for the
+instructions that should be instrumented.
 
 To summarize, the LLVMPin framework is one of a few instrumentation tools for
 LLVM IR that are general and configurable, but it does not simplify the work
@@ -41,47 +47,54 @@ instrumentation process.
 In this section, we describe tools that are not designed for general
 instrumentation but use instrumentation over LLVM for various purposes.
 
-Clang compiler provides several sanitizers that use instrumentation to insert
-runtime checks for various errors and undefined behaviour. It offers a memory
-error detection (out-of-bounds dereferences, use-after-free, double-free, etc.)
-with AddressSanitizer~\cite{asan}, that instruments each memory access with a
-check to a \textit{shadow memory}. The shadow memory contains metadata about
+\textsc{Clang} compiler (licensed under University of Illinois/NCSA Open Source
+License) provides several sanitizers that use instrumentation to insert runtime
+checks for various errors and undefined behaviour. It offers a memory error
+detection (out-of-bounds dereferences, use-after-free, double-free, etc.) with
+\textsc{AddressSanitizer}~\cite{asan}, that instruments each memory access with
+a check to a \textit{shadow memory}. The shadow memory contains metadata about
 corresponding program memory, mainly \textit{poisoned redzones} that mark
 locations of the memory that should not be accessed.
-ThreadSanitizer~\cite{tsan} is used for detection of data races in parallel
-programs. The analyzed code is instrumented such that it keeps information
-about each memory access and checks whether the access takes part in a race.
-UndefinedBehaviourSanitizer offers undefined behaviour detection (e.g. integer
-overflows) by instrumenting all operations that may lead to undefined behaviour
-with a check. All these sanitizers modify the code during compilation and
-insert run-time checks. Disadvantage is a slowdown and memory overhead these tool
-introduce.
+\textsc{ThreadSanitizer}~\cite{tsan} is used for detection of data races in
+parallel programs. The analyzed code is instrumented such that it keeps
+information about each memory access and checks whether the access takes part
+in a race.  \textsc{UndefinedBehaviourSanitizer} offers undefined behaviour
+detection (e.g. integer overflows) by instrumenting all operations that may
+lead to undefined behaviour with a check. All these sanitizers modify the code
+during compilation and insert run-time checks. Disadvantage is a slowdown and
+memory overhead these tool introduce, however, the overhead introduced by other
+tools that are designed for similar purposes is usually higher.
 
-SAFECode~\cite{safecode} (Static Analysis For safe Execution of Code) is a~tool
-developed at University of Illinois that checks memory safety properties, such
+\textsc{SAFECode}~\cite{safecode} (Static Analysis For safe Execution of Code)
+is a~tool developed at University of Illinois that checks memory safety, such
 as accessing valid memory locations, out-of-bounds accesses, invalid frees and
 detection of dangling pointers. Like Clang sanitizers it inserts run-time
 checks at compile-time. Moreover, it uses static analysis to minimize the
 number of inserted run-time checks.
 
-Another tool that uses instrumentation to check memory safety properties is
-Map2Check~\cite{map2check}. It was inspired by \symbiotic and it inserts
-functions that track allocated memory and operations on pointers with
-assertions that check whether some property was violated in a similar way as we
-describe in~\ref{sec:basic}. Moreover, it also inserts assertions that check
-integer overflows after arithmetic operations. Currently, it does not use any
-static analysis to reduce the number of inserted checks. Like \symbiotic, it
-uses \klee~\cite{klee} as symbolic executor to check reachability of error
-locations.
+Another tool that uses instrumentation to check memory safety is
+\textsc{Map2Check}~\cite{map2check} (licensed under GNU General Public License
+v2.0). It was inspired by \symbiotic and it inserts functions that track
+allocated memory and operations on pointers with assertions that check whether
+some property was violated in a similar way as we describe in~\ref{sec:basic}.
+Moreover, it can also insert assertions that check integer overflows after
+arithmetic operations. Currently, it does not use any static analysis to reduce
+the number of inserted checks. Like \symbiotic, it uses \klee~\cite{klee} as
+symbolic executor to check reachability of error locations.
 
-Loom is an LLVM library for instrumentation that enables to insert lines of
-code that expose values of LLVM instruction (e.g. return values of function
-calls). In contrast to the above mentioned tools, it is in a sense
+\textsc{Loom} is an LLVM library for instrumentation that enables to insert
+lines of code that expose values of LLVM instructions (e.g. return values of
+function calls). The values are then written to a log or printed to the
+standard output. In contrast to the above mentioned tools, it is in a sense
 configurable. Users can specify what functions should be instrumented, whether
 they should be instrumented on the caller site or the callee site, what
 structures should be instrumented and whether they should be instrumented on
 reads or writes, etc.
 
-LLVM IR Trace Profiler~\cite{tracer} (LLVM-Tracer) is an LLVM pass that, like Loom,
-instruments the given code to expose values. It traces dynamic register values
-as well as memory addresses.
+\textsc{LLVM IR Trace Profiler}~\cite{tracer} (\textsc{LLVM-Tracer}, licensed
+under BSD 3-clause) is an LLVM pass that, like \textsc{Loom}, instruments the
+given code to expose values. It traces dynamic register values as well as
+memory addresses. The user can again specify what functions should be
+instrumented. \todo{k cemu to je}
+
+\todo{zaver}
