@@ -1,3 +1,9 @@
+As only one of the tools described in Chapter~\ref{chap:tools} can be used for
+an instrumentation of user's choice, we decided to implement a tool for general
+instrumentation that would be configurable by user. Moreover, the user
+would not need to implement the core of instrumentation routine as with
+\llvmpin (see Section~\ref{sec:llvmpin}).
+
 \smartdiagramset{%
   back arrow disabled=true,
   module minimum width=2cm,
@@ -47,17 +53,20 @@
 \end{figure}
 
 The basic idea of our instrumentation tool is depicted in
-figure~\ref{fig:scheme}. Since it works on the top of LLVM, a program in C that
-is supposed to be instrumented has to be translated. Instrumentation is
-required to be configurable, therefore it needs to be supplied with two files:
-a~file with definitons of instrumentation functions whose calls will be
-inserted into the code and a JSON file with instrumentation rules. The rules
-define how sequences of LLVM instructions should be instrumented with calls of
-instrumentation functions. The tool first loads a~whole module from a given
-LLVM code and begins to process it. In each phase it goes through all
-instructions and it looks if they match any instrumentation rule. If a match is
-found, the rule is applied (i.e.~a~new code is inserted according to the rule).
-The result of the instrumentation process is again an LLVM program.
+Figure~\ref{fig:scheme}. Since it works on top of LLVM, a program in C that is
+supposed to be instrumented has to be translated to LLVM first. Instrumentation
+is required to be configurable, therefore it needs to be supplied with two
+config files created by a user: a~file with definitons of instrumentation
+functions translated to LLVM whose calls will be inserted into the code and a
+JSON file with instrumentation rules. The rules define how sequences of LLVM
+instructions should be instrumented with calls of instrumentation functions.
+For now, we only allow to insert call instructions since it is sufficient as
+any other demanded instruction can be wrapped in the called function.  The tool
+first loads a~whole module that is to be instrumented and begins to process it.
+The instrumentation can be divided into phases; in each phase it goes through
+all instructions and it looks if they match any instrumentation rule. If a
+match is found, the rule is applied (i.e.~a~new code is inserted according to
+the rule). The result of the instrumentation process is again an LLVM program.
 
 \section{Flags and Plugins}
 
@@ -68,22 +77,22 @@ whether the flag is set to the given value (see section~\ref{sec:conditions}).
 
 The instrumentation module can also be extended by plugins that can reply to
 queries. To define a list of possible queries, all plugins have to implement
-the same interface. The interface consists of a set of virtual functions that
-correspond to the queries and return default string values. For example, a
+the same interface. The interface describes a set of callbacks that
+correspond to the queries and return string values. For example, a
 query "Do pointers \texttt{p1} and \texttt{p2} point to the same memory
-location?" can correspond to a virtual function \texttt{pointersAreEqual(p1,
+location?" can correspond to a callback \texttt{pointersAreEqual(p1,
 p2)} that returns \emph{"unknown"} by default. These functions can be redefined
 by concrete plugins that are able to decide the corresponding queries, e.g.
 the function \texttt{pointersAreEqual} can be redefined by a plugin for a
 pointer analysis, since with this analysis it is possible to determine whether
 two pointers point to the same memory location.
 
-Currently, following queries are available:
+Currently, the following queries are available:
 \begin{description}
   \item[isValidPointer(p, len)] Is a dereference of a pointer \texttt{p} of
-  length \texttt{len} valid operation?
-  \item[hasKnownSize(block)] Can we statically determine the size of the
-  \texttt{block} that is being dereferenced?
+        length \texttt{len} valid operation?
+  \item[hasKnownSize(object)] Can we statically determine the size of the memory
+         object that is being dereferenced?
   \item[pointsTo(p,a)] Does the given pointer \texttt{p} point to the value \texttt{a}?
   \item[isNull(p)] Does the given pointer \texttt{p} point to NULL?
 \end{description}
@@ -91,9 +100,10 @@ There are three possible answers for these queries:
 \emph{"true"}, \emph{"unknown"} and \emph{"false"}. The default answer for all
 these queries is \emph{"unknown"}.
 
-The list of queries can be easily appended by adding more virtual functions
-that return string values to the interface and by reimplementing the function
-that links the queries with corresponding functions.
+The list of queries can be easily appended by adding more callbacks that return
+string values to the interface and by \todo{change this in the code and then
+also here} reimplementing the function that links the queries with
+corresponding functions.
 
 \section{Conditions}\label{sec:conditions}
 
