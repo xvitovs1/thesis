@@ -295,7 +295,10 @@ all conditions are checked as described in Section~\ref{sec:conditions}. If
 they are satisfied, the rule is ready to be applied. The new \texttt{call}
 instruction that is to be inserted is created according to
 \texttt{newInstruction} field and injected before or after the matched sequence
-of instructionaccording to \texttt{where} field.
+of instructionaccording to \texttt{where} field. For now, we support only
+inserting \texttt{call} instructions, however, it does not limit the user in
+any way. Since functions whose calls will be inserted are defined by the user,
+all other instructions can be inserted through these functions.
 
 Since the parameters of the callee function might be of different types than
 values that are passed as these parameters, we might need to convert them
