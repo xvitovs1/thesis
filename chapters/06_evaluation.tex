@@ -1,1 +1,24 @@
-TODO
+In this chapter, we evaluate the instrumentation for checking memory safety
+that was employed in \symbiotic on benchmarks from SV-COMP~2017.
+
+We used all the benchmarks from the official \emph{MemSafety} category along
+with the benchmarks from the subcategory \emph{TerminCrafted}, which was not
+included in the official SV-COMP~2017. The benchmarks from these categories are
+programs in C and they can contain either no violation of memory safety, or the
+following errors:
+\begin{itemize}
+  \item invalid memory deallocation, e.g. double free error,
+  \item invalid pointer dereference,
+  \item memory leaks.
+\end{itemize}
+
+\symbiotic first instruments the program according to one of the configurations
+described in Chapter~\ref{chap:memsafety}. Since the newly inserted code marks
+possible error locations, we reduced the problem to a reachability problem.
+\symbiotic optionally slices the program and then runs symbolic executor \klee
+that checks the reachability of the error locations. If no error location is
+reachable, it answers \emph{true}. If some error location is reachable, it
+answeres \emph{false} and gives information about a type of the error (e.g.
+invalid dereference or memory leak). If \symbiotic cannot decide the
+reachability (a given time limit was exceeded, the tool ran out of memory,
+etc.), it answers \emph{unknown}.
