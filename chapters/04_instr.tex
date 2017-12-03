@@ -150,14 +150,6 @@ of expected results for queries that expect accurate answer can contain just
 
 \section{Configuration}\label{sec:config}
 
-\lstset{
-    basicstyle=\footnotesize,
-    string=[s]{"}{"},
-    stringstyle=\color{blue},
-    comment=[l]{:},
-    commentstyle=\color{black},
-}
-
 The JSON file contains following fields:
 \begin{center}
 \begin{tabular}[h]{>{\bfseries}p{4.2cm} | p{7.8cm}}
@@ -254,19 +246,6 @@ file specified by the \texttt{file} field in the JSON configuration. This file
 has to be compiled to LLVM and after a successful instrumentation, the
 definitions of functions must be linked to the instrumented module.
 
-\begin{figure}[h]
-\lstinputlisting{examples/json_example.json}
-\caption{Example of an \texttt{instructionRule} in a JSON configuration file.}
-\label{fig:json_example}
-\end{figure}
-
-\begin{figure}[h]
-\lstinputlisting{examples/json_example2.json}
-\caption{Example of an \texttt{globalVariablesRule} in a JSON configuration file.}
-\label{fig:json_example2}
-\end{figure}
-
-
 \section{Applying Rules}
 
 In this section, we describe an algorithm for applying the instrumentation
@@ -300,14 +279,28 @@ inserting \texttt{call} instructions, however, it does not limit the user in
 any way. Since functions whose calls will be inserted are defined by the user,
 all other instructions can be inserted through these functions.
 
+\lstset{escapeinside={<@}{@>}, columns=fullflexible, basicstyle=\ttfamily, language=llvm, style=nasm}
+\begin{figure}[h]
+\begin{lstlisting}
+%result = add i32 5, 10
+<@{\color[RGB]{0, 135, 0} \%1 = bitcast i32 \%result to i64}@>
+<@{\color[RGB]{0, 135, 0} call void @\_\_INSTR\_log\_addition(i64 \%1)}@>
+\end{lstlisting}
+\caption{Instrumentation of a code where bitcast is needed. The
+\texttt{\_\_INSTR\_log\_addition} function takes a 64-bit integer as an
+argument. The 32-bit integer \texttt{result} thus needs to be conevrted before
+it is passed as the argument.}
+\label{fig:bitcast_example}
+\end{figure}
 Since the parameters of the callee function might be of different types than
 values that are passed as these parameters, we might need to convert them
 before the insertion of the new call. In this case, we first insert a
 \texttt{bitcast} instruction that performs the needed conversion. For example,
-if the function that is to be called takes a 64-bit integer as a parameter, but
-the value passed as this parameter is a 32-bit integer, instruction
-\texttt{bitcast i32 value to i64} will be inserted before the new call
-instruction.
+in Figure~\ref{fig:bitcast_example}, the function
+\texttt{\_\_INSTR\_log\_addition} that is to be called takes a 64-bit integer
+as a parameter, but the value that we want to pass as this parameter
+(\texttt{result}) is a 32-bit integer. Therefore, instruction \texttt{bitcast
+i32 result to i64} will be inserted before the new call instruction.
 
 If the rule is successfully applied, flags are set according to field
 \texttt{setFlags} (if present). If field \texttt{remember} is defined, the
@@ -332,6 +325,20 @@ called and are not instrumented.
 
 \todo{describe cloning metadata?}
 
+\lstset{
+    basicstyle=\footnotesize,
+    string=[s]{"}{"},
+    stringstyle=\color{blue},
+    comment=[l]{:},
+    commentstyle=\color{black},
+}
+
+\begin{figure}[h]
+\lstinputlisting{examples/json_example.json}
+\caption{Example of an \texttt{instructionRule} in a JSON configuration file.}
+\label{fig:json_example}
+\end{figure}
+
 In figure~\ref{fig:json_example}, we can see an example of an
 \texttt{instructionRule}. In this case, every time the tool comes across a
 \texttt{load} instruction in any function (\texttt{in} is set to "*"), the only
@@ -345,6 +352,13 @@ type that is being load is stored to a variable \texttt{<t2>} and condition
 \texttt{<t2>} is inserted \emph{before} the current \texttt{load} instruction.
 After a successful application of this rule, flag \texttt{loadPresent} is set
 to \emph{true}.
+
+\begin{figure}[h]
+\lstinputlisting{examples/json_example2.json}
+\caption{Example of an \texttt{globalVariablesRule} in a JSON configuration file.}
+\label{fig:json_example2}
+\end{figure}
+
 
 An example of a \texttt{globalVariablesRule} can be found in
 figure~\ref{fig:json_example2}. The value of a global variable is stored to a
