@@ -11,11 +11,13 @@ following errors:
   \item invalid pointer dereference,
   \item memory leaks.
 \end{itemize}
+There were 390 benchmarks in total, \todo{X} of them containing some violation
+of memory safety, \todo{Y} of them safe.
 
 \symbiotic first instruments the program according to one of the configurations
 described in Chapter~\ref{chap:memsafety}. Since the newly inserted code marks
 possible error locations, we reduced the problem to a reachability problem.
-\symbiotic optionally slices the program and then runs symbolic executor \klee
+\symbiotic slices the program and then runs symbolic executor \klee
 that checks the reachability of the error locations. If no error location is
 reachable, it answers \emph{true}. If some error location is reachable, it
 answeres \emph{false} and gives information about a type of the error (e.g.
@@ -25,12 +27,67 @@ etc.), it answers \emph{unknown}.
 
 All the following measurements were taken on machines with \textit{Intel(R)
 Core(TM) i7-3770} CPU that run on 3.40GHz frequency and dispose of 8~GB of
-memory. The CPU time limit was set to 900~s and the memory limit was set to
-8~GB. We used the utility \emph{Benchexec}~\cite{Beyer2015} for reliable
-measurement of consumed resources.
+memory. The memory limit was set to 8~GB. We used the utility
+\emph{Benchexec}~\cite{Beyer2015} for reliable measurement of consumed
+resources.
 
-\section{Comparison of configurations}
+\section{Comparison of Configurations}
+In this section, we compare three configurations introduced in
+Chapter~\ref{chap:memsafety}: the basic approach (one-phase instrumentation
+without any plugins, denoted as \emph{basic}), the enhancement with a pointer
+analysis as a plugin (denoted as \emph{ePTA}) and the staged instrumentation
+(denoted as \emph{staged}). We ran \symbiotic with these configurations on the
+above mentioned benchmarks from SV-COMP with the CPU time limit set to 120~s.
 
+\begin{table}[t]
+\begin{tabular}{l  r   r   r}
+ & basic & ePTA & staged \\
+ \hline
+ size before instrumentation & 155782 & 155782 & 155782 \\
+ size after instrumentation  & 322018 & 192468 & 171327 \\
+ \hline
+ inserted calls (total)    & 166236 & 36686 & 15545 \\
+ inserted calls (average)  & 427 & 94 & 39 \\
+\end{tabular}
+\caption{The comparison of the three configurations for the memory safety
+instrumentation. Size is given by the number of instructions of a program.}
+\label{tab:numbers}
 
+\end{table}
 
-\section{Comparison with other tools}
+As for the number of inserted instructions, we present the experimental results
+in Table~\ref{tab:numbers}. The first part of the table shows the total size of
+the benchmarks expressed with the number of LLVM instructions before and after
+instrumentation for each configuration. In the second part, the cumulative and
+average number of inserted \texttt{call} instructions is counted. Note that the
+total size before instrumentation is 155782 instructions, which is 400
+instruction on average. This means that with the basic approach, the final code
+after instrumentation is of double size. Evidently, the number of inserted
+instructions significantly decreases with each enhancement.
+
+\todo{times}
+
+\begin{table}[h]
+\begin{tabular}{l  r   r   r}
+ & basic & ePTA & staged \\
+ \hline
+ true     & 116 & 123  & \textbf{182} \\
+ false    & 132 & 133  & \textbf{135} \\
+ unknown  & 1   & 1    & 1 \\
+ timeout  & 138 & 131  & \textbf{71} \\
+\end{tabular}
+\caption{The answers given by \symbiotic when using the three configurations for the memory safety
+instrumentation.}
+\label{tab:answers}
+
+\end{table}
+
+The enhancements had also a positive effect on the answers of \symbiotic as
+shown in Table~\ref{tab:answers}. When using the basic approach, \symbiotic did
+not manage to decide 138 benchmarks in the given time limit. With a pointer
+analysis, it decided 7 more benchmarks. The most significant improvement was
+achieved with the staged instrumentation: \symbiotic ran out of time only in 71
+cases. The both enhancements had impact especially on the benchmarks that did not
+contain any violation of memory safety.
+
+\section{Comparison with Other Tools}
