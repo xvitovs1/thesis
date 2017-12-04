@@ -82,10 +82,14 @@ arithmetic operations. Currently, it does not use any static analysis to reduce
 the number of inserted checks. Like \symbiotic, it uses \klee~\cite{klee} as
 symbolic executor to check reachability of error locations.
 
-\textsc{Loom} is an LLVM library for instrumentation that enables to insert
-lines of code that expose values of LLVM instructions (e.g. return values of
-function calls). The values are then written to a log or printed to the
-standard output. In contrast to the above mentioned tools, it is in a sense
+\textsc{Loom}~\cite{loom} and \textsc{LLVM IR Trace Profiler}~\cite{tracer}
+(LLVM-Tracer) are tools used for code profiling. Both of them dynamically
+gather information about the program that is being analyzed.
+
+\textsc{Loom} is an LLVM library for instrumentation that enables
+to insert lines of code that expose values of LLVM instructions (e.g. return
+values of function calls). The values are then written to a log or printed to
+the standard output. In contrast to the above mentioned tools, it is in a sense
 configurable. Users can specify what functions should be instrumented, whether
 they should be instrumented on the caller site or the callee site, what
 structures should be instrumented and whether they should be instrumented on
@@ -95,7 +99,7 @@ reads or writes, etc.
 under BSD 3-clause) is an LLVM pass that, like \textsc{Loom}, instruments the
 given code to expose values. It traces dynamic register values as well as
 memory addresses. The user can again specify what functions should be
-instrumented. \todo{k cemu to je}
+instrumented.
 
 All the above described tools can serve well for the purpose they were designed
 for. However, if the user wants to change even slightly the semantics of the
