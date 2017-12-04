@@ -8,8 +8,8 @@ safety.
 \section{LLVMPin Instrumentation Framework}\label{sec:llvmpin}
 
 \llvmpin~\cite{llvmpin} is a framework that simplifies implementing tools for
-LLVM~IR instrumentation. First of all, a user has to implement an~LLVMPin tool,
-which is a C++ code that must contain three parts:
+instrumentation of LLVM~IR. First of all, a user has to implement
+an~\textsc{LLVMPin} tool, which is a C++ code that must contain three parts:
 
 \begin{itemize}
     \item Analysis part that contains definitions of analysis functions and a
@@ -19,13 +19,13 @@ which is a C++ code that must contain three parts:
     defined by user.
     \item \texttt{REQUIRE} routine with a list of existing LLVM
     passes\footnote{\url{http://llvm.org/docs/WritingAnLLVMPass.html}} required
-    by the LLVMPin tool.
+    by the \textsc{LLVMPin} tool.
 \end{itemize}
 
 The framework basically consists of two scripts:
 
 \begin{itemize}
-    \item \texttt{llvmpin-gen} compiles the LLVMPin tool,
+    \item \texttt{llvmpin-gen} compiles the \textsc{LLVMPin} tool,
     \item \texttt{llvmpin} runs the instrumentation, gerates the new bitcode
     and from the bitcode it produces an executable.
 \end{itemize}
@@ -37,9 +37,9 @@ user still has to implement the eintire \texttt{INSTRUMENT} routine to describe
 how to instrument the code, including the procedure that searches for the
 instructions that should be instrumented.
 
-To summarize, the LLVMPin framework is one of a few instrumentation tools for
-LLVM IR that are general and configurable, but it does not simplify the work
-for the user in terms of writing a code that performs the core of the
+To summarize, the \textsc{LLVMPin} framework is one of a few instrumentation
+tools for LLVM IR that are general and configurable, but it does not simplify
+the work for the user in terms of writing a code that performs the core of the
 instrumentation process.
 
 \section{Other Tools}
@@ -83,23 +83,23 @@ the number of inserted checks. Like \symbiotic, it uses \klee~\cite{klee} as
 symbolic executor to check reachability of error locations.
 
 \textsc{Loom}~\cite{loom} and \textsc{LLVM IR Trace Profiler}~\cite{tracer}
-(LLVM-Tracer) are tools used for code profiling. Both of them dynamically
-gather information about the program that is being analyzed.
+(\textsc{LLVM-Tracer}, licensed under BSD 3-clause) are tools used for code
+profiling. Both of them dynamically gather information about the program that
+is being analyzed.
 
-\textsc{Loom} is an LLVM library for instrumentation that enables
-to insert lines of code that expose values of LLVM instructions (e.g. return
-values of function calls). The values are then written to a log or printed to
-the standard output. In contrast to the above mentioned tools, it is in a sense
+\textsc{Loom} is an LLVM library for instrumentation that enables to insert
+lines of code that expose values of LLVM instructions (e.g. return values of
+function calls). The values are then written to a log or printed to the
+standard output. In contrast to the above mentioned tools, it is in a sense
 configurable. Users can specify what functions should be instrumented, whether
 they should be instrumented on the caller site or the callee site, what
 structures should be instrumented and whether they should be instrumented on
 reads or writes, etc.
 
-\textsc{LLVM IR Trace Profiler}~\cite{tracer} (\textsc{LLVM-Tracer}, licensed
-under BSD 3-clause) is an LLVM pass that, like \textsc{Loom}, instruments the
-given code to expose values. It traces dynamic register values as well as
-memory addresses. The user can again specify what functions should be
-instrumented.
+\textsc{LLVM-Tracer}~\cite{tracer} is an LLVM pass that, like \textsc{Loom},
+instruments the given code to expose values. It traces dynamic register values
+as well as memory addresses. The user can again specify what functions should
+be instrumented.
 
 All the above described tools can serve well for the purpose they were designed
 for. However, if the user wants to change even slightly the semantics of the
