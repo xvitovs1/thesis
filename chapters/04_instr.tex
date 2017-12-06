@@ -100,12 +100,12 @@ redefined by concrete plugins that are able to decide the corresponding
 queries, e.g.  the function \texttt{pointersCanBeEqual} can be redefined by a
 plugin for a pointer analysis, since with this analysis it is possible to
 determine whether two pointers can point to the same memory location. Since
-each plugin is focused on only a~subset of queries, i.e. it can answer to only
-a subset of the queries, there are default answers for queries that cannot be
-decided by the given plugin. The default answers are neutral and should not
-influence the instrumentation. For example, the default answer for the query
-"Can pointers \texttt{p1} and \texttt{p2} point to the same memory location?"
-can be \emph{"unknown"}.
+each plugin is focused on only a~subset of queries, i.e. it is able to answer
+to only a subset of the queries, there are default answers for queries that
+cannot be decided by the given plugin. The default answers are neutral and
+should not influence the instrumentation. For example, the default answer for
+the query "Can pointers \texttt{p1} and \texttt{p2} point to the same memory
+location?" can be \emph{"unknown"}.
 
 Currently, the following queries are available:
 \begin{description}
@@ -116,9 +116,10 @@ Currently, the following queries are available:
   \item[pointsTo(p,a)] Does the given pointer \texttt{p} point to the value \texttt{a}?
   \item[isNull(p)] Does the given pointer \texttt{p} point to NULL?
 \end{description}
-There are three possible answers for these queries:
-\emph{"true"}, \emph{"unknown"} and \emph{"false"}. The default answer for all
-these queries is \emph{"unknown"}.
+There are four possible answers for these queries: \emph{"true"},
+\emph{maybe}, \emph{"false"} and \emph{"unknown"}. The default answer for all
+these queries is \emph{"unknown"} and is supposed to be used by the plugins
+that are not able to evaaluate the query.
 
 The list of queries can be easily appended by adding more callbacks that return
 string values to the interface and by \todo{change this in the code} adding a
@@ -161,10 +162,10 @@ two types of these conditions:
 \end{itemize}
 Answers of plugins are now not limited only to \emph{true} or \emph{false} but
 can reply with a string. A plugin can now for example answer also with
-\emph{"unknown"}. A condition is satisfied if and only if some answer from a
+\emph{"maybe"}. A condition is satisfied if and only if some answer from a
 plugin equals one of the values in the list of expected answers. This solves
 the above mentioned problem as the list of expected answers for queries about
-possibilities can contain both \emph{"true"} and \emph{"unknown"} and the list
+possibilities can contain both \emph{"true"} and \emph{"maybe"} and the list
 of expected answers for queries that expect accurate answer can contain just
 \emph{"true"}.
 
