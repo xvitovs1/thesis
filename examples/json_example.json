@@ -12,8 +12,12 @@
      "operands": ["<t1>","<t2>","__INSTR_check_pointer"]
   },
   "where":"before",
-  "conditions": [{"query":["isValidPointer","<t1>","<t2>"],
-                  "expectedResult":["false","unknown"]}],
+  "conditions": [
+                  {
+                    "query": ["isValidPointer","<t1>","<t2>"],
+                    "expectedResult": ["false","unknown"]
+                  }
+                ],
   "in": "*",
   "setFlags": [["loadPresent","true"]]
 }
