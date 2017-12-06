@@ -100,7 +100,7 @@ redefined by concrete plugins that are able to decide the corresponding
 queries, e.g.  the function \texttt{pointersCanBeEqual} can be redefined by a
 plugin for a pointer analysis, since with this analysis it is possible to
 determine whether two pointers can point to the same memory location. Since
-each plugin is focused on only a subset of queries, i.e. it can answer to only
+each plugin is focused on only a~subset of queries, i.e. it can answer to only
 a subset of the queries, there are default answers for queries that cannot be
 decided by the given plugin. The default answers are neutral and should not
 influence the instrumentation. For example, the default answer for the query
@@ -122,7 +122,7 @@ these queries is \emph{"unknown"}.
 
 The list of queries can be easily appended by adding more callbacks that return
 string values to the interface and by \todo{change this in the code} adding a
-handler for this query in class \texttt{Analyzer}.
+handler for this query in the class \texttt{Analyzer}.
 
 \section{Conditions}\label{sec:conditions}
 
@@ -145,7 +145,7 @@ conditions that do not ask about possibilities but need an accurate answer
 worked fine if only one plugin was available, because the condition was
 evaluated according to one reply from this plugin, but when we added more
 plugins, we ran into problems. We needed the conditions that ask if some
-statement may hold to evaluate to \emph{true} if all plugins answeres
+statement may hold to evaluate to \emph{true} if all plugins answer
 \emph{true} because of the over-approximations and at the same time we needed
 some conditions that ask if some statement really holds to evaluate to
 \emph{true} if at least one plugin answeres \emph{true}.
@@ -170,7 +170,21 @@ of expected answers for queries that expect accurate answer can contain just
 
 \section{Configuration}\label{sec:config}
 
-The JSON file contains the following fields:
+In this section, we describe the structure of a JSON file in which
+instrumentation rules are defined.
+
+Variables in this configuration file are enclosed by the '<' and '>'
+characters. These variables can be used to store some values for later use. For
+example, to store an operand of a \texttt{load} instruction to the variable
+\texttt{<t>}, a field \texttt{operands} that will correspond to the operands of
+\texttt{load} instruction will be set to \texttt{["<t>"]}.  Variable
+\texttt{<t>} will contain the value of the operand of \texttt{load} instruction
+in the scope of the application of the current rule and it can be used e.g. as
+an argument of the function call that is to be instrumented or as an argument
+of a condition.
+
+A JSON file with instrumentation rules has to contain the following fields:
+
 \begin{center}
 \begin{tabular}[h]{>{\bfseries}p{4.2cm} | p{7.8cm}}
   \texttt{file}                & Path to a file with definitions of instrumentation functions. \\
@@ -192,74 +206,170 @@ Each element of \texttt{instructionRules} is an JSON object described with
 several fields:
 \begin{description}
     \item[\texttt{findInstructions}] Sequence of instructions we are searching
-    for. For each instruction in the sequence, we need to fill in an
-        \texttt{instruction} field, that specifies a name of the instruction,
-        \texttt{returnValue} that enables to remember the return value of the
-        instruction in a given variable (can be set to "*" if the return value
-        is not needed), and \texttt{operands} that enables either to match the
-        operands or to remember the operand values in given variables. We can
-        also optionally fill in fields \texttt{getSizeTo} and
-        \texttt{getPointerInfoTo}. \texttt{getSizeTo} can be used only with
+    for. For each instruction in the sequence, we need to fill in a field
+        \texttt{instruction}, that specifies a name of the instruction that has
+        to be matched, \texttt{returnValue} that enables to remember the return
+        value of the instruction in a given variable (can be set to "*" if the
+        return value is not needed), and \texttt{operands} that enables either
+        to match the operands or to remember the operand values in given
+        variables. We can also optionally fill in fields \texttt{getTypeSize}
+        and \texttt{getPointerInfo}. \texttt{getTypeSize} can be used only with
         \texttt{load}, \texttt{store} or \texttt{alloca} instruction and it
         stores size of the type of the value that is being loaded, stored or
-        allocated to the given variable. \texttt{getPointerInfoTo} can be used
+        allocated to the given variable. \texttt{getPointerInfo} can be used
         only with \texttt{load} or \texttt{store} and it stores two values to
         given variables (if possible): size of the allocated memory to which
         the dereferenced pointer points to and corresponding \texttt{alloca}
         instruction. Since we can get this information only from a pointer
         analysis, this field can be used only when the analysis is available as
         a~plugin.
+
+        In Figure~\ref{fig:findInstrs_example} we give an example of
+        a \texttt{findInstructions} field. We are searching for a sequence of
+        instructions of length one, namely for a \texttt{store} instruction.
+        Since \texttt{store} does not return any value, the
+        \texttt{returnValue} field is set to "*". The two operands of
+        \texttt{store} will be stored in variables \texttt{<t1>} and
+        \texttt{<t2>}, size of the type of the value that is being stored will
+        be kept in the variable \texttt{<t3>}. \texttt{<t4>} will contain the
+        size of the allocated memory to which the pointer in \texttt{<t2>}
+        points to and \texttt{<t5>} will contain the \texttt{alloca}
+        instruction that allocated this memory.
+
+        \begin{minipage}{\linewidth}
+        \lstset{
+            basicstyle=\footnotesize,
+            string=[s]{"}{"},
+            stringstyle=\color{blue},
+            comment=[l]{:},
+            commentstyle=\color{black},
+        }
+        \lstinputlisting{examples/findInstrs.json}
+        \captionof{figure}{Example of a \texttt{findInstructions} field in a
+        JSON configuration file.}
+        \label{fig:findInstrs_example}
+      \end{minipage}
+
     \item[\texttt{newIstruction}] A new instruction that is to be inserted. It
     contains two mandatory fields: \texttt{instruction} that specifies a name
     of the new instruction (for now, only \texttt{call} instruction is
-    supported), and \texttt{operands} of the instruction. Moreover, it is
-    possible to add one optional field \texttt{stripInBoundsOffsets} that
-    strips off pointer casts from a given pointer (i.e. returns the value of
-    the original pointer).
+    supported), and \texttt{operands} of the instruction. For example, a
+    \texttt{newInstruction} field in Figure~\ref{fig:newInstr_example} means
+    that if the tool decides to apply the rule, a call to a function
+    \texttt{\_\_INSTR\_check\_pointer} will be inserted and values of
+    \texttt{<t1>} and \texttt{<t2>} will be passed as arguments of the
+    function.
+
+     \begin{minipage}{\linewidth}
+        \lstset{
+            basicstyle=\footnotesize,
+            string=[s]{"}{"},
+            stringstyle=\color{blue},
+            comment=[l]{:},
+            commentstyle=\color{black},
+        }
+        \lstinputlisting{examples/newInstr.json}
+        \captionof{figure}{Example of a \texttt{newInstruction} field in a
+        JSON configuration file.}
+        \label{fig:newInstr_example}
+      \end{minipage}
+
     \item[\texttt{in}] Name of a function, in which this rule should be
     applied. Can be set to a value "*" meaning that it should be used in all
     functions.
+
     \item[\texttt{where}] Specifies the location of insertion. It can be:
     \texttt{before} or \texttt{after} the found sequence of instructions,
     \texttt{entry} (at the entry point of the given function, \texttt{in}
     cannot be set to "*" in this case) or \texttt{return} (before every
-    \texttt{return} instruction of the given function, \texttt{in} cannot be
-    set to "*" in this case).
+    \texttt{return} instruction of the given function, \todo{\texttt{in} cannot be
+    set to "*" in this case}).
+
     \item[\texttt{conditions}] List of conditions that have to be satisfied
     (see section~\ref{sec:conditions}). A condition consists of fields
     \texttt{query} and \texttt{expectedResult}. \texttt{Query} is a list
-    where the first element is the name of a condition and other elements are
-    parameters passed to the condition, \texttt{expectedResult} is a list of
+    where the first element is the name of a query and other elements are
+    parameters passed to the the query, \texttt{expectedResult} is a list of
     expected results of the query.
-    \item[\texttt{setFlags}] List of pairs \texttt{<flag, value>} that sets
-      all \texttt{flags} to the corresponding \texttt{value} if the rule was
-      applied. This field is optional.
+
+    In Figure~\ref{fig:conditions_example} a \texttt{conditions} list contains
+    two conditions that have to be satisfied for the rule to be applied. The
+    first condition is a query for plugins. This condition will be satisfied if
+    at elast one of the plugins will answer \emph{false} or \emph{"unknown"} to
+    the query \texttt{isValidPointer} with values of \texttt{<t1>} and
+    \texttt{t2} passed as parameters. The second condition will be satisfied if
+    the flag \texttt{testFlag} is set to \emph{"true"}.
+
+    \begin{minipage}{\linewidth}
+        \lstset{
+            basicstyle=\footnotesize,
+            string=[s]{"}{"},
+            stringstyle=\color{blue},
+            comment=[l]{:},
+            commentstyle=\color{black},
+        }
+        \lstinputlisting{examples/condition.json}
+        \captionof{figure}{Example of a \texttt{conditions} field in a
+        JSON configuration file.}
+        \label{fig:conditions_example}
+      \end{minipage}
+
+    \item[\texttt{setFlags}] List of pairs \texttt{[flag, value]} that sets all
+    \texttt{flags} to the corresponding \texttt{value} if the rule was applied.
+    This field is optional. We give an example of this field in
+    Figure~\ref{fig:setFlags_example}, which sets the flag \texttt{loadPresent}
+    to \emph{"true"} and the flag \texttt{testFlag} to \emph{false}.
+
+     \begin{minipage}{\linewidth}
+        \lstset{
+            basicstyle=\footnotesize,
+            string=[s]{"}{"},
+            stringstyle=\color{blue},
+            comment=[l]{:},
+            commentstyle=\color{black},
+        }
+        \lstinputlisting{examples/set_flags.json}
+        \captionof{figure}{Example of a \texttt{setFlags} field in a
+        JSON configuration file.}
+        \label{fig:setFlags_example}
+      \end{minipage}
+
     \item[\texttt{remember}] Specifies, which variable will be remembered in an
     auxiliary list for later use if the rule is applied. This field is optional.
 \end{description}
 
 \medskip
 
-\noindent A \texttt{globalVariablesRule} is a JSON object with the following fields:
+\noindent A \texttt{globalVariablesRule} can be used for instrumenting global
+variables and it is a JSON object with the following fields:
 \begin{itemize}
     \item \texttt{findGlobals:} Contains a mandatory field
     \texttt{globalVariable} that stores a value of a global variable to the
-    given variable, and an optional field \texttt{getSizeTo} that gets the
-    size of the type of the global variable.
+    given variable, and an optional field \texttt{getSizeTo} that gets the size
+    of the type of the global variable. The field \texttt{findGlobals} in
+    Figure~\ref{fig:findGlobals_example} stores the value of a global variable
+    to the variable \texttt{<t1>} and stores the size of its type in
+    \texttt{<t2>}.
+
+    \begin{minipage}{\linewidth}
+        \lstset{
+            basicstyle=\footnotesize,
+            string=[s]{"}{"},
+            stringstyle=\color{blue},
+            comment=[l]{:},
+            commentstyle=\color{black},
+        }
+        \lstinputlisting{examples/findGlobals.json}
+        \captionof{figure}{Example of a \texttt{findGlobals} field in a
+        JSON configuration file.}
+        \label{fig:findGlobals_example}
+      \end{minipage}
+
     \item \texttt{newInstruction:} The same as in \texttt{instructionRule}.
     \item \texttt{in:} Name of a function, at the beginning of which the new
     instruction will be inserted.
     \item \texttt{conditions:} The same as in \texttt{instructionRule}.
 \end{itemize}
-
-Variables in the JSON configuration file are enclosed by the '<' and '>'
-characters. These variables can be used to store some values for later use. For
-example, to store an operand of a \texttt{load} instruction to the variable
-\texttt{<t>}, the field \texttt{operands} will be set to \texttt{["<t>"]}.
-Variable \texttt{<t>} will contain the value of the operand of \texttt{load}
-instruction in the scope of the current rule and it can be used e.g. as an
-argument of the function call that is to be instrumented or as an argument of a
-condition.
 
 The functions whose calls are instrumented into a code must be defined in a
 file specified by the \texttt{file} field in the JSON configuration. The
@@ -272,11 +382,8 @@ successful instrumentation, it is linked to the instrumented module.
 In this section, we describe the process of applying the instrumentation
 rules on a module loaded from the given LLVM program.
 
-\todo{say something about parsing the rules?}
-
-First, the rules from the JSON file are parsed and loaded into a~corresponding
-structure. If there are some paths to plugins specified, the plugins are
-loaded and the instrumentation part begins.
+First, the rules from the JSON file are parsed. If there are some paths to
+plugins specified, the plugins are loaded and the instrumentation part begins.
 
 The instrumentation is implemented to be staged, therefore the first step is to
 process all the phases one after each other in a following way: iterate over
@@ -289,7 +396,7 @@ if some rule matches the sequence, begin to process the rule.
 
 To process the rule, first of all, the values of operands and return values of
 the matched instructions that are noted by the rule to be saved are stored to
-given variables. If the fields \texttt{getSizeTo} or \texttt{getPointerInfoTo}
+given variables. If the fields \texttt{getTypeSize} or \texttt{getPointerInfo}
 are present, the demanded information is stored to the given variables. Then
 all conditions are checked as described in Section~\ref{sec:conditions}. If
 they are satisfied, the rule is ready to be applied. The new \texttt{call}
