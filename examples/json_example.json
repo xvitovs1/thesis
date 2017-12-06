@@ -4,7 +4,7 @@
        "returnValue": "*" ,
        "instruction": "load",
        "operands": ["<t1>"],
-       "getSizeTo": "<t2>"
+       "getTypeSize": "<t2>"
     }
   ],
   "newInstruction": {

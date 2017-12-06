@@ -1,0 +1,9 @@
+"findInstructions": [
+  {
+     "returnValue": "*" ,
+     "instruction": "store",
+     "operands": ["<t1>", "<t2>"],
+     "getTypeSize": "<t3>",
+     "getPointerInfo": ["<t4>", "<t5>"]
+  }
+]

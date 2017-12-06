@@ -1,7 +1,7 @@
 "globalVariablesRule": {
    "findGlobals": {
       "globalVariable": "<t1>",
-      "getSizeTo": "<t2>"
+      "getTypeSize": "<t2>"
    },
    "newInstruction": {
       "instruction": "call",
