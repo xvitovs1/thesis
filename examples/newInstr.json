@@ -1,0 +1,5 @@
+"newInstruction": {
+   "instruction": "call",
+   "operands": ["<t1>","<t2>","__INSTR_check_pointer"]
+}
+
