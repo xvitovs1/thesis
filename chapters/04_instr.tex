@@ -32,7 +32,7 @@ would not need to implement the core of instrumentation routine as with
       line/.style = { draw, thick, ->, >=stealth },
       line-dashed/.style = { draw, thick, ->, densely dotted, >=stealth }]
     \node [block-sharp] (rules) at (-4.5, -2.75) {\textsf{Instrumentation\\ rules in JSON}};
-    \node [block-sharp] (cprogram) at (0, 2.25) {\textsf{Program in C}};
+    \node [block-sharp] (cprogram) at (0, 2.25) {\textsf{Program to be instrumented}};
     \node [block-sharp] (llvmprogram) at (0, 0) {\textsf{Program in LLVM}};
 	\node [rectangle split, draw, rectangle split parts=2, text
     width=8em,rounded corners, text centered, fill=blue!30] (instr) at (0, -2.75)
@@ -53,7 +53,7 @@ would not need to implement the core of instrumentation routine as with
 \end{figure}
 
 The basic idea of our instrumentation tool is depicted in
-Figure~\ref{fig:scheme}. Since it works on top of LLVM, a program in C that is
+Figure~\ref{fig:scheme}. Since it works on top of LLVM, the given program that is
 supposed to be instrumented has to be translated to LLVM first. Instrumentation
 is required to be configurable, therefore it needs to be supplied with two
 config files created by a user: a~file with definitons of instrumentation
@@ -80,7 +80,7 @@ can be inserted in a later phase according to the noted information.
 \section{Flags and Plugins}
 
 In order to pass some information between phases, a user can define flags in a
-JSON file with instrumentation rules. When inserting a call to a function, it
+JSON file with instrumentation rules. When inserting a~call to a function, it
 is possible to set a flag and, in a later phase, condition some rule by a check
 whether the flag is set to the given value (see section~\ref{sec:conditions}).
 For example, the user might want to set a flag \texttt{malloc-instrumented} to
@@ -91,7 +91,7 @@ there is a call to \emph{malloc} somewhere in the program.
 
 The instrumentation module can also be extended by plugins that can reply to
 queries, which are basically questions that can be decided by a plugin. To
-define a list of possible queries, plugins have to implement the same
+define a list of possible queries, we require the plugins to implement the same
 interface. The interface describes a set of callbacks that correspond to the
 queries and return string values. For example, a query "Can pointers
 \texttt{p1} and \texttt{p2} point to the same memory location?" can correspond
@@ -115,11 +115,14 @@ Currently, the following queries are available:
          object that is being dereferenced?
   \item[pointsTo(p,a)] Does the given pointer \texttt{p} point to the value \texttt{a}?
   \item[isNull(p)] Does the given pointer \texttt{p} point to NULL?
+  \item[isRemembered(value)] Was the given value or a pointer to the value
+  stored with a \texttt{remember} field? (see Section~\ref{sec:config} for more
+  information)
 \end{description}
-There are four possible answers for these queries: \emph{"true"},
-\emph{maybe}, \emph{"false"} and \emph{"unknown"}. The default answer for all
-these queries is \emph{"unknown"} and is supposed to be used by the plugins
-that are not able to evaaluate the query.
+There are four possible answers for these queries: \emph{"true"} (definitely
+yes), \emph{maybe}, \emph{"false"} (definitely no) and \emph{"unknown"}.
+\emph{"unknown"} is the default answer for all these queries and it is supposed
+to be given by the plugins that are not able to evaaluate the query.
 
 The list of queries can be easily appended by adding more callbacks that return
 string values to the interface and by \todo{change this in the code} adding a
@@ -162,11 +165,11 @@ two types of these conditions:
 \end{itemize}
 Answers of plugins are now not limited only to \emph{true} or \emph{false} but
 can reply with a string. A plugin can now for example answer also with
-\emph{"maybe"}. A condition is satisfied if and only if some answer from a
-plugin equals one of the values in the list of expected answers. This solves
+\emph{"maybe"}. A condition is satisfied if and only if some answer from
+a~plugin equals one of the values in the list of expected answers. This solves
 the above mentioned problem as the list of expected answers for queries about
-possibilities can contain both \emph{"true"} and \emph{"maybe"} and the list
-of expected answers for queries that expect accurate answer can contain just
+possibilities can contain both \emph{"true"} and \emph{"maybe"} and the list of
+expected answers for queries that expect accurate answer can contain just
 \emph{"true"}.
 
 \section{Configuration}\label{sec:config}
@@ -275,17 +278,6 @@ several fields:
         \label{fig:newInstr_example}
       \end{minipage}
 
-    \item[\texttt{in}] Name of a function, in which this rule should be
-    applied. Can be set to a value "*" meaning that it should be used in all
-    functions.
-
-    \item[\texttt{where}] Specifies the location of insertion. It can be:
-    \texttt{before} or \texttt{after} the found sequence of instructions,
-    \texttt{entry} (at the entry point of the given function, \texttt{in}
-    cannot be set to "*" in this case) or \texttt{return} (before every
-    \texttt{return} instruction of the given function, \todo{\texttt{in} cannot be
-    set to "*" in this case}).
-
     \item[\texttt{conditions}] List of conditions that have to be satisfied
     (see section~\ref{sec:conditions}). A condition consists of fields
     \texttt{query} and \texttt{expectedResult}. \texttt{Query} is a list
@@ -315,6 +307,19 @@ several fields:
         \label{fig:conditions_example}
       \end{minipage}
 
+    \item[\texttt{in}] Name of a function, in which this rule should be
+    considered for application. For example, \texttt{\textcolor{blue}{"in"}:
+    main} means that this rule will be checked only in the \emph{main}
+    function. It can also be set to a value "*" meaning that it should be used
+    in all functions.
+
+    \item[\texttt{where}] Specifies the location of insertion. It can be:
+    \emph{"before"} or \emph{"after"} the found sequence of instructions,
+    \emph{"entry"} (at the entry point of the given function, \emph{in}
+    cannot be set to "*" in this case) or \emph{return} (before every
+    \texttt{return} instruction of the given function, \todo{\texttt{in} cannot be
+    set to "*" in this case}).
+
     \item[\texttt{setFlags}] List of pairs \texttt{[flag, value]} that sets all
     \texttt{flags} to the corresponding \texttt{value} if the rule was applied.
     This field is optional. We give an example of this field in
@@ -327,7 +332,7 @@ several fields:
             string=[s]{"}{"},
             stringstyle=\color{blue},
             comment=[l]{:},
-            commentstyle=\color{black},
+            commentstyle=\color{black}
         }
         \lstinputlisting{examples/set_flags.json}
         \captionof{figure}{Example of a \texttt{setFlags} field in a
@@ -335,8 +340,10 @@ several fields:
         \label{fig:setFlags_example}
       \end{minipage}
 
-    \item[\texttt{remember}] Specifies, which variable will be remembered in an
-    auxiliary list for later use if the rule is applied. This field is optional.
+    \item[\texttt{remember}] A name of a variable, that should be stored in an
+    auxiliary list, e.g. \texttt{\textcolor{blue}{"remember"}:"<t1>"}. If some
+    rule is conditioned by a~query \texttt{isRemembered} with the variable or a
+    pointer to the variable as its parameter, the condition will be satisfied.
 \end{description}
 
 \medskip
@@ -344,7 +351,7 @@ several fields:
 \noindent A \texttt{globalVariablesRule} can be used for instrumenting global
 variables and it is a JSON object with the following fields:
 \begin{itemize}
-    \item \texttt{findGlobals:} Contains a mandatory field
+    \item \texttt{\textbf{findGlobals}:} Contains a mandatory field
     \texttt{globalVariable} that stores a value of a global variable to the
     given variable, and an optional field \texttt{getSizeTo} that gets the size
     of the type of the global variable. The field \texttt{findGlobals} in
@@ -366,17 +373,18 @@ variables and it is a JSON object with the following fields:
         \label{fig:findGlobals_example}
       \end{minipage}
 
-    \item \texttt{newInstruction:} The same as in \texttt{instructionRule}.
-    \item \texttt{in:} Name of a function, at the beginning of which the new
+    \item \texttt{\textbf{newInstruction}:} The same as in \texttt{instructionRule}.
+    \item \texttt{\textbf{in}:} Name of a function, at the beginning of which the new
     instruction will be inserted.
-    \item \texttt{conditions:} The same as in \texttt{instructionRule}.
+    \item \texttt{\textbf{conditions}:} The same as in \texttt{instructionRule}.
 \end{itemize}
 
 The functions whose calls are instrumented into a code must be defined in a
 file specified by the \texttt{file} field in the JSON configuration. The
 function can be implemented in any language that can be translated into LLVM,
 since the file with the functions is compiled to LLVM first and after a
-successful instrumentation, it is linked to the instrumented module.
+successful instrumentation, it is linked to the instrumented module. We provide
+the user with a script, that performs this translation.
 
 \section{Applying Rules}
 
@@ -393,7 +401,16 @@ that are relevant for the current function. That is, take into consideration
 only rules where \texttt{in} field is set to "*" or to the name of the
 function. Then compare the sequences of instructions defined by these rules
 (field \texttt{findInstructions}) with instructions of the current function and
-if some rule matches the sequence, begin to process the rule.
+if some rule matches the sequence, begin to process the rule. The sequences are
+compared with a simple algorithm: if the first instruction from the
+sequence in \texttt{findInstructions} does not match the current
+instruction from the program, skip this rule. It they match, try to match
+the second instruction from the sequence with the following instruction
+from the program. If they do not match, skip this rule. If they match, try
+to match the third instruction from the sequence with the following
+instruction from the program, and so on. There is currently no need for a
+more efficient algorithm, since the sequences we are looking for are
+usually very short, mostly of length one.
 
 To process the rule, first of all, the values of operands and return values of
 the matched instructions that are noted by the rule to be saved are stored to
@@ -441,23 +458,13 @@ for global variables is applied. That is, a new instruction is inserted at the
 beginning of the function given in \texttt{in} field if conditions are
 satisfied.
 
-Sometimes the program might contain definitions of functions that are never
-called. Such functions can be omitted from the instrumentation process if a
-plugin for a pointer analysis is available. To determine what functions are
-called, we first need to build a call graph from the given program. The pointer
-analysis is necessary for building this graph because functions can be called
-indirectly through function pointers. Then we search the graph with
-breadth-first search algorithm starting from the node that represents the
-\emph{main} function. All functions (or nodes precisely) that were visited
-during the search are marked as reachable. All the other functions are never
-called and are not instrumented.
-
 \lstset{
     basicstyle=\footnotesize,
     string=[s]{"}{"},
     stringstyle=\color{blue},
     comment=[l]{:},
     commentstyle=\color{black},
+    escapeinside={<@}{@>}
 }
 
 \begin{figure}[h]
@@ -496,6 +503,20 @@ positive, a new call of the function \texttt{\_\_INSTR\_remember\_global} with
 arguments \texttt{<t1>} and \texttt{<t2>} is inserted at the beginning of
 \emph{main}.
 
+\section{Unreachable Functions}
+
+Sometimes the program might contain definitions of functions that are never
+called. Such functions can be omitted from the instrumentation process if a
+plugin for a pointer analysis is available. To determine what functions are
+called, we first need to build a call graph from the given program. The pointer
+analysis is necessary for building this graph because functions can be called
+indirectly through function pointers. Then we search the graph with
+breadth-first search algorithm starting from the node that represents the
+\emph{main} function. All functions (or nodes precisely) that were visited
+during the search are marked as reachable. All the other functions are never
+called and are not instrumented.
+
+
 \section{Logging}
 
 To sum up the instrumentation process for a concrete file, each operation is
@@ -510,7 +531,7 @@ logged with a logger. The logger notes following operations:
 \end{itemize}
 The logger also logs errors such as an error when parsing configuration, invalid
 path to a plugin, unsupported instruction insertion, instrumentation of a
-non-existing function, error when inserting a new instruction, etc. Logs can be
+non-existing function, error when inserting a~new instruction, etc. Logs can be
 found in \emph{log.txt} file that is generated at the end of the
 instrumentation process.
 

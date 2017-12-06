@@ -17,13 +17,13 @@ of memory safety, \todo{Y} of them safe.
 \symbiotic first instruments the program according to one of the configurations
 described in Chapter~\ref{chap:memsafety}. Since the newly inserted code marks
 possible error locations, we reduced the problem to a reachability problem.
-\symbiotic slices the program and then runs symbolic executor \klee
-that checks the reachability of the error locations. If no error location is
-reachable, it answers \emph{true}. If some error location is reachable, it
-answeres \emph{false} and gives information about a type of the error (e.g.
-invalid dereference or memory leak). If \symbiotic cannot decide the
-reachability (a given time limit was exceeded, the tool ran out of memory,
-etc.), it answers \emph{unknown}.
+\symbiotic slices the program and then runs symbolic executor \klee that checks
+the reachability of the error locations. If no error location is reachable, it
+answers \emph{true}. If some error location is reachable, it answeres
+\emph{false} and gives information about a type of the error (e.g.  invalid
+dereference or memory leak). If \symbiotic cannot decide the reachability, it
+answers \emph{unknown}  and if it rund out of time, i.e. the given time limit
+was exceeded, the answer is \emph{TIMEOUT}.
 
 All the following measurements were taken on machines with \textit{Intel(R)
 Core(TM) i7-3770} CPU that run on 3.40GHz frequency and dispose of 8~GB of
