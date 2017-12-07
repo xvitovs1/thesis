@@ -315,10 +315,8 @@ several fields:
 
     \item[\texttt{where}] Specifies the location of insertion. It can be:
     \emph{"before"} or \emph{"after"} the found sequence of instructions,
-    \emph{"entry"} (at the entry point of the given function, \emph{in}
-    cannot be set to "*" in this case) or \emph{return} (before every
-    \texttt{return} instruction of the given function, \todo{\texttt{in} cannot be
-    set to "*" in this case}).
+    \emph{"entry"} (at the entry point of the given function) or \emph{return}
+    (before every \texttt{return} instruction of the given function).
 
     \item[\texttt{setFlags}] List of pairs \texttt{[flag, value]} that sets all
     \texttt{flags} to the corresponding \texttt{value} if the rule was applied.
@@ -350,8 +348,8 @@ several fields:
 
 \noindent A \texttt{globalVariablesRule} can be used for instrumenting global
 variables and it is a JSON object with the following fields:
-\begin{itemize}
-    \item \texttt{\textbf{findGlobals}:} Contains a mandatory field
+\begin{description}
+    \item[\texttt{findGlobals}:] Contains a mandatory field
     \texttt{globalVariable} that stores a value of a global variable to the
     given variable, and an optional field \texttt{getSizeTo} that gets the size
     of the type of the global variable. The field \texttt{findGlobals} in
@@ -373,11 +371,11 @@ variables and it is a JSON object with the following fields:
         \label{fig:findGlobals_example}
       \end{minipage}
 
-    \item \texttt{\textbf{newInstruction}:} The same as in \texttt{instructionRule}.
-    \item \texttt{\textbf{in}:} Name of a function, at the beginning of which the new
+    \item[\texttt{newInstruction}:] The same as in \texttt{instructionRule}.
+    \item[\texttt{in}:] Name of a function, at the beginning of which the new
     instruction will be inserted.
-    \item \texttt{\textbf{conditions}:} The same as in \texttt{instructionRule}.
-\end{itemize}
+    \item[\texttt{conditions}:] The same as in \texttt{instructionRule}.
+\end{description}
 
 The functions whose calls are instrumented into a code must be defined in a
 file specified by the \texttt{file} field in the JSON configuration. The
