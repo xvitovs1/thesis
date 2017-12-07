@@ -58,6 +58,10 @@
     thanks        = {These are the acknowledgements for my thesis, which can span multiple paragraphs.},
 }
 
+\usepackage{caption}
+\newcommand{\thenalg}{\thechapter .\arabic{nalg}}
+\DeclareCaptionLabelFormat{algocaption}{Algorithm \thenalg} % defines a new caption label as Algorithm x.y
+
 \usepackage[backend=biber]{biblatex}
 \addbibresource{references.bib}
 
@@ -91,7 +95,6 @@
 
 \usepackage{xspace}
 \usepackage{xcolor}
-\usepackage{caption}
 \usepackage{subcaption}
 
 \newcommand{\todo}[1]{\textcolor{red}{#1}}
@@ -104,6 +107,27 @@
 \newcommand{\dealloclist}{\texttt{deallocated\_list}\xspace}
 \newcommand{\llvmpin}{\textsc{LLVMPin}\xspace}
 \newcommand{\clang}{\textsc{Clang}\xspace}
+
+\lstnewenvironment{algorithm}[1][] %defines the algorithm listing environment
+{
+    \refstepcounter{nalg} %increments algorithm number
+    \captionsetup{labelformat=algocaption,labelsep=colon} %defines the caption setup for: it ises label format as the declared caption label above and makes label and caption text to be separated by a ':'
+    \lstset{ %this is the stype
+        mathescape=true,
+        frame=lines,
+        numbers=left,
+        numberstyle=\tiny,
+		numbersep=5pt,
+        basicstyle=\footnotesize,
+        keywordstyle=\color{black}\bfseries,
+        keywords={,input, output, return, datatype, in, if, else, foreach, while, begin, end, then,and, or, }
+        numbers=left,
+        xleftmargin=1em,
+		framexleftmargin=1em,
+        #1 % this is to add specific settings to an usage of this environment (for instnce, the caption and referable label)
+    }
+}
+{}
 
 \begin{document}
 \chapter{Introduction}
