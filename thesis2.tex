@@ -40,6 +40,7 @@
 %% fonts:
 \usepackage{paratype}
 \def\textrussian#1{{\usefont{T2A}{PTSerif-TLF}{m}{rm}#1}}
+\newcommand{\symbiotic}{\textsc{Symbiotic}\xspace}
 %%
 %% The following section sets up the metadata of the thesis.
 \thesissetup{
@@ -54,8 +55,8 @@
     TeXtitle      = {Instrumentation of LLVM IR},
     keywords      = {instrumentation, static analysis, program analysis, LLVM, memory safety},
     TeXkeywords   = {instrumentation, static analysis, program analysis, LLVM, memory safety},
-    abstract      = {This is the abstract of my thesis, which can span multiple paragraphs.},
-    thanks        = {First I would like to thank my advisor Jan Strejček and my consultant Marek Chalupa for their guidance and the time they spent discussing the thesis with me. TODO}
+    thanks        = {Most of all, I would like to thank my advisor Jan Strejček and my consultant Marek Chalupa for their guidance, patience and the time they spent discussing the thesis with me. I would also like to thank my family and friends for their support when I was working on this thesis.},
+    abstract      = {The thesis is focused on instrumentation of LLVM IR. First, we give an insight into existing tools that instrument a code to perform an analysis on it. Then we implement and describe a new tool for instrumentation of LLVM IR that is configurable by a~user and can use information from various static analyses. We create a configuration for checking memory safety and reduce the number of inserted checks by employing a pointer analysis and dividing it into phases. At the end, we evaluate the instrumentation for checking memory safety integrated in a verification tool called \symbiotic on a set of benchmarks. },
 }
 
 \usepackage{caption}
@@ -99,7 +100,6 @@
 
 \newcommand{\todo}[1]{\textcolor{red}{#1}}
 \newcommand{\llvm}{\textsc{llvm}\xspace}
-\newcommand{\symbiotic}{\textsc{Symbiotic}\xspace}
 \newcommand{\klee}{\textsc{Klee}\xspace}
 \newcommand{\stacklist}{\texttt{stack\_list}\xspace}
 \newcommand{\globalslist}{\texttt{globals\_list}\xspace}
