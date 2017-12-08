@@ -401,12 +401,13 @@ Algorithm~\ref{alg1}.
    begin
       foreach function in module
       begin
-         f_rules $\gets$ rules from this phase where $\texttt{in = "*"}$ or
-                   $\texttt{in = function.name}$
-         apply f_rules where $\texttt{where} = "entry"$
-         apply f_rules where $\texttt{where} = "return"$
-         apply f_rules that match sequences of instructions of the current
-         function if all conditions are satisfied
+         foreach rule in phase where $\texttt{in = "*"}$ or $\texttt{in =}$ name of the function
+         begin
+            if $\texttt{where} = "entry"$ then apply rule
+            else if $\texttt{where} = "return"$ then apply rule
+            else if rule matches the sequence of instructions of the current
+                    function and conditions are satisfied then apply rule
+         end
       end
    end
    apply rules for global variables
@@ -424,7 +425,7 @@ that are relevant for the current function. That is, take into consideration
 only rules where \texttt{in} field is set to "*" or to the name of the
 function. Process the rules that are supposed to be inserted at the beginning
 or at the end of the function (i.e. the rules where the field \texttt{where} is
-set to \emph{"entry"} or \emph{return}). As for the other rules, compare the
+set to \emph{"entry"} or \emph{"return"}). As for the other rules, compare the
 sequences of instructions defined by these rules (field
 \texttt{findInstructions}) with instructions of the current function and if
 some rule matches the sequence, begin to process the rule.
@@ -535,14 +536,13 @@ Sometimes the program might contain definitions of functions that are never
 called. Such functions can be omitted from the instrumentation process because
 the code inserted to these functions would never be executed. To determine what
 functions are called, we first need to build a call graph from the given
-program. A pointer analysis is necessary for building this graph because
-functions can be called indirectly through function pointers. Therefore, this
-functionality is available only if there is a plugin for a pointer analysis. We
-search the call graph with the breadth-first search algorithm starting from the
-node that represents the \emph{main} function. All functions (or nodes
-precisely) that were visited during the search are marked as reachable. All the
-other functions are never called and are not instrumented.
-
+program. Then we search the call graph with the breadth-first search algorithm
+starting from the node that represents the \emph{main} function. All functions
+(or nodes precisely) that were visited during the search are marked as
+reachable. All the other functions are never called and are not instrumented. A
+pointer analysis is necessary for building this graph because functions can be
+called indirectly through function pointers. Therefore, this functionality is
+available only if there is a plugin for a pointer analysis.
 
 \section{Logging}
 
