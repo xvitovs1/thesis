@@ -1,7 +1,47 @@
+\lstset{
+  showstringspaces=false,
+  commentstyle=\color{red},
+  keywordstyle=\color{blue},
+  numbers=none,
+  frame=none
+}
+
 \section{Archive Structure}
 
 TODO
 
 \section{Compilation and Running of Instrumentation}
 
-TODO
+To compile and run the instrumentation tool, it is necessary to have
+\textsc{CMake} and the LLVM~3.9.1 together with \clang~3.9.1 installed. After
+that, bootstrap the libraries for JSON by running the following command in
+\texttt{llvm-instrumentation} directory:
+
+\begin{lstlisting}[language=bash]
+./bootstrap-json
+\end{lstlisting}
+
+\noindent Configure and install the project using:
+
+\begin{lstlisting}[language=bash]
+cmake .
+make install
+\end{lstlisting}
+
+\noindent After the successful installation, the tool can be used bu running the script
+\texttt{instr}.
+
+\todo{pokracovani}
+
+\subsection{Compiling and running instrumentation within \symbiotic}
+
+If you want to use the instrumentation for checking memory safety within
+\symbiotic, follow the \symbiotic installation
+guide\footnote{\url{https://github.com/staticafi/symbiotic/wiki/Symbiotic}}.
+The instrumentation is build automatically togehther with LLVM and other
+components of \symbiotic. To enable memory safety instrumentation, run
+\symbiotic with the option \texttt{-{}-prp=memsafety}. To see the code after
+the instrumentation, run \symbiotic with the option \texttt{-{}-save-files}.
+The instrumented code can be found in the file with suffix \texttt{-instr.bc}
+in the directory \texttt{symbiotic-files}.
+
