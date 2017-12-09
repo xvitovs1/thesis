@@ -1,4 +1,4 @@
-"globalVariablesRule": {
+{
    "findGlobals": {
       "globalVariable": "<t1>",
       "getTypeSize": "<t2>"

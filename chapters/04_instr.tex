@@ -200,7 +200,7 @@ A JSON file with instrumentation rules has to contain the following fields:
   \texttt{phases}              & List of instrumentation phases. Each phase contains a
                                  list of \texttt{instructionRules}. \\
   \hline
-  \texttt{globalVariablesRule} & A rule for instrumenting global
+  \texttt{globalVariablesRules} & List of rules for instrumenting global
                                  variables.
 
 \end{tabular}
@@ -346,8 +346,8 @@ several fields:
 
 \medskip
 
-\noindent A \texttt{globalVariablesRule} can be used for instrumenting global
-variables and it is a JSON object with the following fields:
+\noindent A \texttt{globalVariablesRules} can be used for instrumenting global
+variables. Each element is a JSON object with the following fields:
 \begin{description}
     \item[\texttt{findGlobals}:] Contains a mandatory field
     \texttt{globalVariable} that stores a value of a global variable to the
@@ -481,10 +481,10 @@ If the rule is successfully applied, flags are set according to the field
 given value is stored to an auxiliary list and can be used in a later phase of
 instrumentation.
 
-At the very end, after each phase from the configuration was processed, a rule
-for global variables is applied. That is, a new instruction is inserted at the
-beginning of the function given in \texttt{in} field if conditions are
-satisfied.
+At the very end, after each phase from the configuration was processed, rules
+for global variables are applied. That is, for each rule for global variables,
+a new instruction is inserted at the beginning of the function given in
+\texttt{in} field if conditions are satisfied.
 
 \lstset{
     basicstyle=\footnotesize,
