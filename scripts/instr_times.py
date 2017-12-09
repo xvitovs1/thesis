@@ -61,11 +61,30 @@ trace3 = go.Scatter(
 data = [trace1, trace2, trace3]
 layout = dict(
    xaxis=dict(
-        title='The n-th fastest benchmark.'
+        title='The n-th fastest benchmark.',
+        titlefont=dict(
+            color='black'
+        ),
+        tickfont=dict(
+            color='black'
+        )
    ),
    yaxis=dict(
-        title='The time of instrumentation in ms.'
-   )
+        title='The time of instrumentation in ms.',
+        titlefont=dict(
+            color='black'
+        ),
+        tickfont=dict(
+            color='black'
+        )
+   ),
+   legend=dict(
+        traceorder='reversed',
+        font=dict(
+            size=16,
+			color='black'
+        )
+	)
 )
 fig = dict(data=data, layout=layout)
 plotly.offline.plot(fig, filename='instr_times')

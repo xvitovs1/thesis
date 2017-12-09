@@ -26,7 +26,22 @@ afterStaged = staged['afterI'].sum()
 pStaged = (afterStaged - beforeStaged) / (beforeStaged/100)
 
 layout = go.Layout(
-    title='Increase of the size of the code in %'
+	xaxis=dict(
+        titlefont=dict(
+            color='black'
+        ),
+        tickfont=dict(
+            color='black'
+        )
+   ),
+   yaxis=dict(
+        titlefont=dict(
+            color='black'
+        ),
+        tickfont=dict(
+            color='black'
+        )
+   )
 )
 
 data = [go.Bar(
@@ -34,4 +49,5 @@ data = [go.Bar(
             y=[pBasic, pEpta, pStaged],
     )]
 
-plotly.offline.plot(data, filename='basic_bar')
+fig = go.Figure(data=data, layout=layout)
+plotly.offline.plot(fig, filename='basic_bar')
