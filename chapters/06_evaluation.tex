@@ -79,8 +79,6 @@ total number of instructions expressed in percentage.
   \label{fig:increase_chart}
 \end{figure}
 
-\todo{times}
-
 \begin{table}[t]
 \begin{tabular}{|l || r | r | r|}
  \hline
@@ -109,4 +107,17 @@ most significant improvement was achieved with the staged instrumentation:
 \symbiotic ran out of time only in 71 cases. The both enhancements had impact
 especially on the benchmarks that did not contain any violation of memory
 safety.
+
+We also measured the CPU running times of the instrumentation process. The
+instrumentation using the basic approach took approximately 40~ms on average.
+Even though the enhanced configurations of the instrumentation need to
+additionally perform a pinter analysis at the beginning, the running times increased
+insignificantly as showed in Figure~\ref{fig:times_chart}.
+
+\begin{figure}[h]
+  \includegraphics[width=\textwidth]{charts/instr_times_chart.png}
+  \caption{The CPU running times of instrumentation when using
+  the three configurations for the memory safety instrumentation.}
+  \label{fig:times_chart}
+\end{figure}
 
