@@ -108,6 +108,11 @@
 \newcommand{\llvmpin}{\textsc{LLVMPin}\xspace}
 \newcommand{\clang}{\textsc{Clang}\xspace}
 
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
 \lstnewenvironment{algorithm}[1][] %defines the algorithm listing environment
 {
     \refstepcounter{nalg} %increments algorithm number
