@@ -21,14 +21,21 @@ that, bootstrap the libraries for JSON by running the following command in
 ./bootstrap-json
 \end{lstlisting}
 
-\noindent Configure and install the project using:
+\noindent Since configuration for checking memory safety is included in the archive, we
+also need to bootstrap the library \texttt{dg} for the pointer analysis:
+
+\begin{lstlisting}[language=bash]
+./bootstrap-dg
+\end{lstlisting}
+
+\noindent Now configure and install the project using:
 
 \begin{lstlisting}[language=bash]
 cmake .
 make install
 \end{lstlisting}
 
-\noindent After the successful installation, the tool can be used bu running the script
+\noindent After the successful installation, the tool can be used by running the script
 \texttt{instr}.
 
 \todo{pokracovani}
