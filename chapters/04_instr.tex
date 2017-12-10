@@ -1,6 +1,6 @@
 As only one of the tools described in Chapter~\ref{chap:tools} can be used for
-an instrumentation of user's choice, we decided to implement a tool for general
-instrumentation that would be configurable by user. Moreover, the user
+an arbitrary instrumentation, we decided to implement a tool for general
+instrumentation that would be configurable by a user. Moreover, the user
 would not need to implement the core of instrumentation routine as with
 \llvmpin (see Section~\ref{sec:llvmpin}).
 
@@ -53,124 +53,129 @@ would not need to implement the core of instrumentation routine as with
 \end{figure}
 
 The basic idea of our instrumentation tool is depicted in
-Figure~\ref{fig:scheme}. Since it works on top of LLVM, the given program that is
-supposed to be instrumented has to be translated to LLVM first. Instrumentation
-is required to be configurable, therefore it needs to be supplied with two
-config files created by a user: a~file with definitons of instrumentation
-functions translated into LLVM whose calls will be inserted into the code and a
-JSON file with instrumentation rules. The rules define how sequences of LLVM
-instructions should be instrumented with calls of instrumentation functions.
-For now, we only allow to insert call instructions since it is sufficient as
-any other demanded instruction can be wrapped in the called function.
+Figure~\ref{fig:scheme}. Since it works on top of LLVM, the given program that
+is supposed to be instrumented has to be translated to LLVM first.
+Instrumentation is required to be configurable, therefore it needs to be
+supplied with two config files created by a user: a JSON file with
+instrumentation rules and a~file with definitons of so called
+\emph{instrumentation functions} whose calls will be inserted into the code and
+a JSON file with instrumentation rules. The instrumentation rules define how
+sequences of LLVM instructions should be instrumented with calls of
+instrumentation functions.  We only allow to insert call instructions since it
+is sufficient as any other demanded instruction can be wrapped in a~called
+function.
 
-The instrumentation proceeds in one or more phases, each phase containing a set
+The instrumentation proceeds in one or more phases, each phase defined by a set
 of instrumentation rules.The tool goes through all instructions of the module
-loaded from given LLVM file in each phase and it looks if the instructions
+loaded from a given LLVM file in each phase and it looks if the instructions
 match any instrumentation rule of the current phase. If a match is found, the
 rule is applied (i.e.~a~new code is inserted according to the rule). The result
 of the instrumentation process is again an LLVM program.
 
 The phased instrumentation is useful because it allows the user to gather some
-information in earlier phases and to use it in later phases. For example, it is
+information in earlier phases and use it in later phases. For example, it is
 pointless to insert a check for memory leaks if there is no call to
 \emph{malloc} in the program. Therefore, the presence of a call to
 \emph{malloc} can be noted in the first phase, and the check for memory leaks
 can be inserted in a later phase according to the noted information.
 
-\section{Flags and Plugins}
+Since this tool for instrumentation was originally implemented in order to
+enable checking memory safety in \symbiotic, some of the features described in
+this chapter were added just for this purpose. Therefore, the tool might seem
+to be concentrated on memory safety. However, it can still be used also for
+general instrumentation.
 
-In order to pass some information between phases, a user can define flags in a
-JSON file with instrumentation rules. When inserting a~call to a function, it
-is possible to set a flag and, in a later phase, condition some rule by a check
-whether the flag is set to the given value (see section~\ref{sec:conditions}).
-For example, the user might want to set a flag \texttt{malloc-instrumented} to
-\emph{true} when instrumenting a call to \emph{malloc} in the first phase of
-the instrumentation, and to insert a check for memory leaks at the end of
-\emph{main} in the second phase only if the flag is set to \emph{true}, i.e. if
-there is a call to \emph{malloc} somewhere in the program.
+\section{Intuition for Instrumentation Rules}
+The instrumentation rules determine what instructions will be instrumented and
+when. There is a set of rules for each phase of the instrumentation. The first
+part of an instrumentation rule is a sequence of instructions that should be
+instrumented. The second part is the definition of the new instruction that
+will be inserted if the sequence is matched and the placement of this
+instruction (e.g.~after the matched sequence). A user can additionally specify
+conditions, under which a~rule should be applied. In order to pass some
+information between phases, it is also possible to define flags that can be set
+during a rule's application. The detailed description of instrumentation rules
+can be found in Section~\ref{sec:config}.
 
-The instrumentation module can also be extended by plugins that can reply to
-queries, which are basically questions that can be decided by a plugin. To
-define a list of possible queries, we require the plugins to implement the same
-interface. The interface describes a set of callbacks that correspond to the
-queries and return string values. For example, a query "Can pointers
-\texttt{p1} and \texttt{p2} point to the same memory location?" can correspond
-to a callback \texttt{pointersCanBeEqual(p1, p2)}. These functions can be
-redefined by concrete plugins that are able to decide the corresponding
-queries, e.g.  the function \texttt{pointersCanBeEqual} can be redefined by a
-plugin for a pointer analysis, since with this analysis it is possible to
-determine whether two pointers can point to the same memory location. Since
-each plugin is focused on only a~subset of queries, i.e. it is able to answer
-to only a subset of the queries, there are default answers for queries that
-cannot be decided by the given plugin. The default answers are neutral and
-should not influence the instrumentation. For example, the default answer for
-the query "Can pointers \texttt{p1} and \texttt{p2} point to the same memory
-location?" can be \emph{"unknown"}.
-
-Currently, the following queries are available:
-\begin{description}
-  \item[isValidPointer(p, len)] Is a dereference of a pointer \texttt{p} of
-        length \texttt{len} valid operation?
-  \item[hasKnownSize(object)] Can we statically determine the size of the memory
-         object that is being dereferenced?
-  \item[pointsTo(p,a)] Does the given pointer \texttt{p} point to the value \texttt{a}?
-  \item[isNull(p)] Does the given pointer \texttt{p} point to NULL?
-  \item[isRemembered(value)] Was the given value or a pointer to the value
-  stored with a \texttt{remember} field? (see Section~\ref{sec:config} for more
-  information)
-\end{description}
-There are four possible answers for these queries: \emph{"true"} (definitely
-yes), \emph{"maybe"}, \emph{"false"} (definitely no) and \emph{"unknown"}.
-\emph{"unknown"} is the default answer for all these queries and it is supposed
-to be given by the plugins that are not able to evaaluate the query.
-
-The list of queries can be easily appended by adding more callbacks that return
-string values to the interface and by adding a handler for this query in the
-class \texttt{Analyzer}.
+Another useful feature are plugins. Plugins are external analyses that can
+evaluate queries on values from the program that is being instrumented. The
+queries might be used in conditions for the instrumentation rules.
 
 \section{Conditions}\label{sec:conditions}
 
 To enable conditional instrumentation, the rules can be extended with
 conditions. To apply a rule, all conditions for the rule have to be satisfied.
 
-The very first idea was to implement the conditions as lists of predicates over
-values from the program that is being verified. Since static analyses provided
-by plugins are supposed to be over-approximating, the predicates were set to
-reason about possibilities (e.g. may the pointer be invalid?). The static
-analyses could answer either \emph{true} or \emph{false}, therefore answering
-\emph{true} was a conservative answer if an analysis did not have enough
-information to refute the predicate. A condition was evaluated as \emph{true}
-if all plugins answered that it was satisfied. If at least one plugin said that
-the condition was not satisfied, the condition was evaluated as \emph{false}.
-
-However, we later found a drawback of this method when we needed to use
-conditions that do not ask about possibilities but need an accurate answer
-(e.g. is the size of this allocated memory known at compile-time?). The method
-worked fine if only one plugin was available, because the condition was
-evaluated according to one reply from this plugin, but when we added more
-plugins, we ran into problems. We needed the conditions that ask if some
-statement may hold to evaluate to \emph{true} if all plugins answer
-\emph{true} because of the over-approximations and at the same time we needed
-some conditions that ask if some statement really holds to evaluate to
-\emph{true} if at least one plugin answeres \emph{true}.
-
-Our solution was to define a condition as a query that can take values from the
-program being verified as parameters, and a list of expected answers. There are
-two types of these conditions:
+A condition is a query that can take values from the program being verified as
+parameters, and a list of expected answers. There are two types of these
+conditions:
 \begin{itemize}
- \item conditions that check whether a flag is set to the given value, i.e. the
- query is the name of the flag and the list of expected results contains the
- given value,
+ \item conditions that check whether a flag is set to a certain value, i.e.~the
+ query is the name of the flag and the list of expected results contains the value,
  \item conditions that check answers of plugins to given queries.
 \end{itemize}
-Answers of plugins are now not limited only to \emph{true} or \emph{false} but
-can reply with a string. A plugin can now for example answer also with
-\emph{"maybe"}. A condition is satisfied if and only if some answer from
-a~plugin equals one of the values in the list of expected answers. This solves
-the above mentioned problem as the list of expected answers for queries about
-possibilities can contain both \emph{"true"} and \emph{"maybe"} and the list of
-expected answers for queries that expect accurate answer can contain just
-\emph{"true"}.
+
+A condition for a flag is satisfied if and only if the value of the flag equals
+one of the values in the list of expected results. A condition for plugins is
+satisfied if and only if some answer from a~plugin equals one of the values in
+the list of expected answers. That is, all plugins are asked to evaluate the
+query and if one of them replies with one of the expected values, the condition
+is satisfied.
+
+\section{Flags and Plugins}
+
+As mentioned above, in order to pass some information between phases a user can
+define flags in a JSON file with instrumentation rules. When inserting a~call
+to a function, it is possible to set a flag and, in a later phase, condition
+some rule by a check whether the flag is set to the given value (see
+Section~\ref{sec:conditions}).  For example, the user might want to set a flag
+\texttt{malloc-instrumented} to \emph{true} when instrumenting a~call to
+\emph{malloc} in the first phase of the instrumentation, and to insert a~check
+for memory leaks at the end of \emph{main} in the second phase only if the flag
+    is set to \emph{true}, i.e.~if there is a call to \emph{malloc} somewhere
+    in the program.
+
+The instrumentation module can also be extended by plugins that can reply to
+queries, which are basically questions that can be decided by a plugin. Plugins
+can reply with a string, i.e.~a~plugin can for example answer
+with~\emph{``maybe''}.  To define a list of possible queries, we require the
+plugins to implement a given interface. The interface describes a set of
+callbacks that correspond to the queries and return string values. For example,
+a query ``Can pointers \texttt{p1} and \texttt{p2} point to the same memory
+location?'' can correspond to a callback \texttt{pointersCanBeEqual(p1, p2)}.
+These functions can be redefined by concrete plugins that are able to decide
+the corresponding queries, e.g.~the function \texttt{pointersCanBeEqual} can be
+redefined by a plugin performing a pointer analysis, since with this analysis
+it is possible to determine whether two pointers can point to the same memory
+location. Since each plugin is able to answer to only a subset of the queries
+according to its specialization, there are default answers for queries that
+cannot be decided by the given plugin. For example, the default answer for the
+query ``Can pointers \texttt{p1} and \texttt{p2} point to the same memory
+location?'' can be \emph{``unknown''}.
+
+Currently, the following queries with their corresponding meanings are available:
+\begin{description}
+  \item[isValidPointer(p, offset)] Is a dereference of a pointer \texttt{p}
+  valid operation? More precisely, can the memory block to which the pointer
+  \texttt{p} points to be accessed at the given \texttt{offset}?
+  \item[hasKnownSize(object)] Can we statically determine the size of the memory
+         object that is being dereferenced?
+  \item[pointsTo(p,a)] Can the given pointer \texttt{p} point to the value \texttt{a}?
+  \item[isNull(p)] Can the given pointer \texttt{p} point to NULL?
+  \item[isRemembered(value)] Was the given value or a pointer to the value
+  stored with a \texttt{remember} field? (see Section~\ref{sec:config} for more
+  information)
+\end{description}
+The default answer for all these queries is \emph{``unknown''} and it is
+supposed to be given by the plugins that are not able to evaluate the query. In
+Chapter~\ref{chap:memsafety} we implement a plugin performing a pointer
+analysis that answers to these queries with answers \emph{``true''},
+\emph{``false''} and \emph{``maybe''}.
+
+The list of queries can be easily appended by adding more callbacks that return
+string values to the interface and by adding a handler for the added query in the
+class \texttt{Analyzer}.
+
 
 \section{Configuration}\label{sec:config}
 
@@ -183,15 +188,15 @@ example, to store an operand of a \texttt{load} instruction to the variable
 \texttt{<t>}, a field \texttt{operands} that will correspond to the operands of
 \texttt{load} instruction will be set to \texttt{["<t>"]}.  Variable
 \texttt{<t>} will contain the value of the operand of \texttt{load} instruction
-in the scope of the application of the current rule and it can be used e.g. as
-an argument of the function call that is to be instrumented or as an argument
+in the scope of the application of the current rule and it can be used e.g.~as
+an argument of the function call that will be inserted or as an argument
 of a condition.
 
 A JSON file with instrumentation rules has to contain the following fields:
 
 \begin{center}
 \begin{tabular}[h]{>{\bfseries}p{4.2cm} | p{7.8cm}}
-  \texttt{file}                & Path to a file with definitions of instrumentation functions. \\
+  \texttt{file}                & Path to the file with definitions of instrumentation functions. \\
   \hline
   \texttt{analyses}            & List of paths to plugins. \\
   \hline
@@ -206,35 +211,36 @@ A JSON file with instrumentation rules has to contain the following fields:
 \end{tabular}
 \end{center}
 
-Each element of \texttt{instructionRules} is an JSON object described with
+\subsection{\texttt{InstructionRules}}
+Each element of \texttt{instructionRules} is JSON object described with
 several fields:
 \begin{description}
     \item[\texttt{findInstructions}] Sequence of instructions we are searching
     for. For each instruction in the sequence, we need to fill in a field
-        \texttt{instruction}, that specifies a name of the instruction that has
-        to be matched, \texttt{returnValue} that enables to remember the return
-        value of the instruction in a given variable (can be set to "*" if the
-        return value is not needed), and \texttt{operands} that enables either
-        to match the operands or to remember the operand values in given
-        variables. We can also optionally fill in fields \texttt{getTypeSize}
-        and \texttt{getPointerInfo}. \texttt{getTypeSize} can be used only with
+        \texttt{instruction} that specifies the name of the instruction to be
+        matched, \texttt{returnValue} that enables to remember the return value
+        of the instruction in a given variable (can be set to "*" if the return
+        value is not needed), and \texttt{operands} that enables either to
+        match the operands or to remember the operand values in variables. We
+        can also optionally fill in fields \texttt{getTypeSize} and
+        \texttt{getPointerInfo}. \texttt{getTypeSize} can be used only with
         \texttt{load}, \texttt{store} or \texttt{alloca} instruction and it
-        stores size of the type of the value that is being loaded, stored or
-        allocated to the given variable. \texttt{getPointerInfo} can be used
+        stores the size of the type of the value that is being loaded, stored
+        or allocated to the given variable. \texttt{getPointerInfo} can be used
         only with \texttt{load} or \texttt{store} and it stores two values to
-        given variables (if possible): size of the allocated memory to which
-        the dereferenced pointer points to and corresponding \texttt{alloca}
+        given variables (if possible): size of the allocated memory block to which
+        the dereferenced pointer points to and the corresponding \texttt{alloca}
         instruction. Since we can get this information only from a pointer
         analysis, this field can be used only when the analysis is available as
         a~plugin.
 
-        In Figure~\ref{fig:findInstrs_example} we give an example of a
+        In Figure~\ref{fig:findInstrs_example}, we give an example of a
         \texttt{findInstructions} field. We are searching for a sequence of
         instructions of length one, namely for a \texttt{store} instruction.
         Since \texttt{store} does not return any value, the
         \texttt{returnValue} field is set to "*". The second operand of
         \texttt{store} will be stored in variables \texttt{<t1>} (the first one
-        will be skipped as it is set to "*"), size of the type
+        will be skipped as it is set to "*"), the size of the type
         of the value that is being stored will be kept in the variable
         \texttt{<t2>}. \texttt{<t3>} will contain the size of the allocated
         memory to which the pointer in \texttt{<t1>} points to and
@@ -250,16 +256,17 @@ several fields:
             commentstyle=\color{black},
         }
         \lstinputlisting{examples/findInstrs.json}
-        \captionof{figure}{Example of a \texttt{findInstructions} field in a
+        \captionof{figure}{Example of the \texttt{findInstructions} field in a
         JSON configuration file.}
         \label{fig:findInstrs_example}
       \end{minipage}
 
-    \item[\texttt{newIstruction}] A new instruction that is to be inserted. It
+    \item[\texttt{newInstruction}] A new instruction that is to be inserted. It
     contains two mandatory fields: \texttt{instruction} that specifies a name
     of the new instruction (for now, only \texttt{call} instruction is
-    supported), and \texttt{operands} of the instruction. For example, a
-    \texttt{newInstruction} field in Figure~\ref{fig:newInstr_example} means
+    supported), and \texttt{operands} of the instruction. The last operand is
+    the name of the function that should be called. For example in
+    Figure~\ref{fig:newInstr_example}, the \texttt{newInstruction} field means
     that if the tool decides to apply the rule, a call to a function
     \texttt{\_\_INSTR\_check\_pointer} will be inserted and values of
     \texttt{<t1>} and \texttt{<t2>} will be passed as arguments of the
@@ -274,25 +281,36 @@ several fields:
             commentstyle=\color{black},
         }
         \lstinputlisting{examples/newInstr.json}
-        \captionof{figure}{Example of a \texttt{newInstruction} field in a
+        \captionof{figure}{Example of the \texttt{newInstruction} field in a
         JSON configuration file.}
         \label{fig:newInstr_example}
       \end{minipage}
 
+    \item[\texttt{in}] Name of a function, in which this rule should be
+    considered for application. For example, \texttt{\textcolor{blue}{"in"}:
+    main} means that this rule will be checked only in the \emph{main}
+    function. It can also be set to a value "*" meaning that it should be used
+    in all functions.
+
+    \item[\texttt{where}] Specifies the location of insertion. It can be:
+    \emph{``before''} or \emph{``after''} the found sequence of instructions,
+    \emph{``entry''} (at the entry point of the given function) or \emph{``return''}
+    (before every \texttt{return} instruction of the given function).
+
     \item[\texttt{conditions}] List of conditions that have to be satisfied
-    (see section~\ref{sec:conditions}). A condition consists of fields
-    \texttt{query} and \texttt{expectedResult}. \texttt{Query} is a list
+    (see Section~\ref{sec:conditions}). A condition consists of fields
+    \texttt{query} and \texttt{expectedResult}. The \texttt{query} is a list
     where the first element is the name of a query and other elements are
-    parameters passed to the the query, \texttt{expectedResult} is a list of
+    parameters passed to the query, the \texttt{expectedResult} is a list of
     expected results of the query.
 
-    In Figure~\ref{fig:conditions_example} a \texttt{conditions} list contains
+    In Figure~\ref{fig:conditions_example}, a \texttt{conditions} list contains
     two conditions that have to be satisfied for the rule to be applied. The
     first condition is a query for plugins. This condition will be satisfied if
-    at elast one of the plugins will answer \emph{false} or \emph{"unknown"} to
+    at least one of the plugins will answer \emph{``false''} or \emph{``maybe''} to
     the query \texttt{isValidPointer} with values of \texttt{<t1>} and
     \texttt{t2} passed as parameters. The second condition will be satisfied if
-    the flag \texttt{testFlag} is set to \emph{"true"}.
+    the flag \texttt{testFlag} is set to \emph{``true''}.
 
     \begin{minipage}{\linewidth}
         \lstset{
@@ -303,27 +321,16 @@ several fields:
             commentstyle=\color{black},
         }
         \lstinputlisting{examples/condition.json}
-        \captionof{figure}{Example of a \texttt{conditions} field in a
+        \captionof{figure}{Example of the \texttt{conditions} field in a
         JSON configuration file.}
         \label{fig:conditions_example}
       \end{minipage}
-
-    \item[\texttt{in}] Name of a function, in which this rule should be
-    considered for application. For example, \texttt{\textcolor{blue}{"in"}:
-    main} means that this rule will be checked only in the \emph{main}
-    function. It can also be set to a value "*" meaning that it should be used
-    in all functions.
-
-    \item[\texttt{where}] Specifies the location of insertion. It can be:
-    \emph{"before"} or \emph{"after"} the found sequence of instructions,
-    \emph{"entry"} (at the entry point of the given function) or \emph{return}
-    (before every \texttt{return} instruction of the given function).
 
     \item[\texttt{setFlags}] List of pairs \texttt{[flag, value]} that sets all
     \texttt{flags} to the corresponding \texttt{value} if the rule was applied.
     This field is optional. We give an example of this field in
     Figure~\ref{fig:setFlags_example}, which sets the flag \texttt{loadFlag}
-    to \emph{"true"} and the flag \texttt{testFlag} to \emph{false}.
+    to \emph{``true''} and the flag \texttt{testFlag} to \emph{``false''}.
 
      \begin{minipage}{\linewidth}
         \lstset{
@@ -334,25 +341,27 @@ several fields:
             commentstyle=\color{black}
         }
         \lstinputlisting{examples/set_flags.json}
-        \captionof{figure}{Example of a \texttt{setFlags} field in a
+        \captionof{figure}{Example of the \texttt{setFlags} field in a
         JSON configuration file.}
         \label{fig:setFlags_example}
       \end{minipage}
 
-    \item[\texttt{remember}] A name of a variable, that should be stored in an
+    \item[\texttt{remember}] The name of a variable, whose value should be stored in an
     auxiliary list, e.g. \texttt{\textcolor{blue}{"remember"}:"<t1>"}. If some
     rule is conditioned by a~query \texttt{isRemembered} with the variable or a
     pointer to the variable as its parameter, the condition will be satisfied.
 \end{description}
 
-\medskip
+\subsection{\texttt{globalVariablesRules}}
 
-\noindent A \texttt{globalVariablesRules} can be used for instrumenting global
-variables. Each element is a JSON object with the following fields:
+\texttt{globalVariablesRules} can be used for instrumenting global
+variables. The rules are applied on all declarations of global variable. Each
+element of \texttt{globalVariablesRules} is a JSON object with the following
+fields:
 \begin{description}
     \item[\texttt{findGlobals}:] Contains a mandatory field
-    \texttt{globalVariable} that stores a value of a global variable to the
-    given variable, and an optional field \texttt{getSizeTo} that gets the size
+    \texttt{globalVariable} that stores the value of a global variable to the
+    given variable, and an optional field \texttt{getTypeSize} that gets the size
     of the type of the global variable. The field \texttt{findGlobals} in
     Figure~\ref{fig:findGlobals_example} stores the value of a global variable
     to the variable \texttt{<t1>} and stores the size of its type in
@@ -367,7 +376,7 @@ variables. Each element is a JSON object with the following fields:
             commentstyle=\color{black},
         }
         \lstinputlisting{examples/findGlobals.json}
-        \captionof{figure}{Example of a \texttt{findGlobals} field in a
+        \captionof{figure}{Example of the \texttt{findGlobals} field in a
         JSON configuration file.}
         \label{fig:findGlobals_example}
       \end{minipage}
@@ -382,15 +391,19 @@ The functions whose calls are instrumented into a code must be defined in a
 file specified by the \texttt{file} field in the JSON configuration. The
 function can be implemented in any language that can be translated into LLVM,
 since the file with the functions is compiled to LLVM first and after a
-successful instrumentation, it is linked to the instrumented module. We provide
-the user with a script, that performs this translation.
+successful instrumentation, it is linked to the instrumented module.
 
 \section{Applying Rules}
 
 In this section, we describe the process of applying the instrumentation rules
-on a module loaded from the given LLVM program as depicted in
+on a module of a given LLVM program as depicted in
 Algorithm~\ref{alg1}.
 
+
+First, the rules from the JSON file are parsed. If there are some paths to
+plugins specified, the plugins are loaded and the instrumentation part begins.
+
+\begin{figure}[t]
 \newcounter{nalg}[chapter] % defines algorithm counter for chapter-level
 
 \begin{algorithm}[caption={Applying the instrumentation rules.}, label={alg1},columns=fullflexible]
@@ -404,10 +417,8 @@ Algorithm~\ref{alg1}.
       begin
          foreach rule in phase where $\texttt{in = "*"}$ or $\texttt{in =}$ name of the function
          begin
-            if $\texttt{where} = "entry"$ then apply rule
-            else if $\texttt{where} = "return"$ then apply rule
-            else if rule matches the sequence of instructions of the current
-                    function and conditions are satisfied then apply rule
+            if rule matches the sequence of instructions of the current function
+               and conditions are satisfied then insert the new instruction
          end
       end
    end
@@ -415,18 +426,14 @@ Algorithm~\ref{alg1}.
    return instrumented module
  end
 \end{algorithm}
-
-First, the rules from the JSON file are parsed. If there are some paths to
-plugins specified, the plugins are loaded and the instrumentation part begins.
+\end{figure}
 
 The instrumentation is implemented to be staged, therefore the first step is to
-process all the phases one after each other in a following way: iterate over
+process all the phases one after each other in the following way: iterate over
 functions from the loaded module and check rules from the phase being processed
 that are relevant for the current function. That is, take into consideration
 only rules where \texttt{in} field is set to "*" or to the name of the
-function. Process the rules that are supposed to be inserted at the beginning
-or at the end of the function (i.e. the rules where the field \texttt{where} is
-set to \emph{"entry"} or \emph{"return"}). As for the other rules, compare the
+function.  As for the other rules, compare the
 sequences of instructions defined by these rules (field
 \texttt{findInstructions}) with instructions of the current function and if
 some rule matches the sequence, begin to process the rule.
@@ -449,13 +456,14 @@ all conditions are checked as described in Section~\ref{sec:conditions}. If
 they are satisfied, the rule is ready to be applied. The new \texttt{call}
 instruction that is to be inserted is created according to
 \texttt{newInstruction} field and injected before or after the matched sequence
-of instruction according to \texttt{where} field. For now, we support only
-inserting \texttt{call} instructions, however, it does not limit the user in
-any way. Since functions whose calls will be inserted are defined by the user,
-all other instructions can be inserted through these functions.
+of instructions, or at the beginning or at the end of a given function
+according to the \texttt{where} field. For now, we support only inserting
+\texttt{call} instructions, however, it does not limit the user in any way.
+Since functions whose calls will be inserted are defined by the user, all other
+instructions can be inserted through these functions.
 
 \lstset{escapeinside={<@}{@>}, columns=fullflexible, basicstyle=\ttfamily, language=llvm, style=nasm}
-\begin{figure}[h]
+\begin{figure}[t]
 \begin{lstlisting}
 %result = add i32 5, 10
 <@{\color[RGB]{0, 135, 0} \%1 = bitcast i32 \%result to i64}@>
@@ -469,23 +477,23 @@ it is passed as the argument.}
 \end{figure}
 Since the parameters of the called function might be of different types than
 values that are passed as these parameters, we might need to convert them
-before the insertion of the new call. In this case, we first insert a
+before the insertion of the new call. In this case, we first insert the
 \texttt{bitcast} instruction that performs the needed conversion. For example,
 in Figure~\ref{fig:bitcast_example}, the function
 \texttt{\_\_INSTR\_log\_addition} that is to be called takes a 64-bit integer
 as a parameter, but the value that we want to pass as the parameter
-(\texttt{result}) is a 32-bit integer. Therefore, the instruction \texttt{bitcast
-i32 result to i64} will be inserted before the new call instruction.
+(\texttt{\%result}) is a 32-bit integer. Therefore, the instruction \texttt{bitcast
+i32 \%result to i64} will be inserted before the new call instruction.
 
 If the rule is successfully applied, flags are set according to the field
 \texttt{setFlags} (if present). If the field \texttt{remember} is defined, the
-given value is stored to an auxiliary list and can be used in a later phase of
+given value is stored to an auxiliary list and can be used in later phases of
 instrumentation.
 
 At the very end, after each phase from the configuration was processed, rules
 for global variables are applied. That is, for each rule for global variables,
-a new instruction is inserted at the beginning of the function given in
-\texttt{in} field if conditions are satisfied.
+    a new instruction is inserted at the beginning of the function given in the
+    \texttt{in} field if conditions are satisfied.
 
 \lstset{
     basicstyle=\footnotesize,
@@ -502,15 +510,15 @@ a new instruction is inserted at the beginning of the function given in
 \label{fig:json_example}
 \end{figure}
 
-In Figure~\ref{fig:json_example}, we can see an example of an
+In Figure~\ref{fig:json_example}, we can see an example of the
 \texttt{instructionRule}. In this case, every time the tool comes across a
 \texttt{load} instruction in any function (\texttt{in} is set to "*"), the only
 operand of \texttt{load} is stored to a variable \texttt{<t1>}, size of the
 type that is being loaded is stored to a variable \texttt{<t2>} and the condition
 \texttt{isValidPointer} is checked by all plugins (i.e.~a~function
 \texttt{isValidPointer} is called with arguments \texttt{<t1>} and
-\texttt{<t2>} by all plugins). If some plugin answered either \emph{"false"} or
-\emph{"unknown"}, the condition is satisfied and a call of the function
+\texttt{<t2>} by all plugins). If some plugin answered either \emph{``false''} or
+\emph{``maybe''}, the condition is satisfied and a call of the function
 \texttt{\_\_INSTR\_check\_pointer} with arguments \texttt{<t1>} and
 \texttt{<t2>} is inserted \emph{before} the current \texttt{load} instruction.
 After a successful application of this rule, flag \texttt{loadPresent} is set
@@ -524,9 +532,9 @@ to \emph{true}.
 
 An example of a \texttt{globalVariablesRule} can be found in
 Figure~\ref{fig:json_example2}. The value of a global variable is stored to a
-variable \texttt{<t1>} and size of the type of the global variable is stored to
+variable \texttt{<t1>} and the size of the type of this global variable is stored to
 a variable \texttt{<t2>}. Plugins are asked whether the given condition
-\texttt{isRemembered} with argument \texttt{<t1>} holds and if the answer is
+\texttt{isRemembered} with the argument \texttt{<t1>} holds and if the answer is
 positive, a new call of the function \texttt{\_\_INSTR\_remember\_global} with
 arguments \texttt{<t1>} and \texttt{<t2>} is inserted at the beginning of
 \emph{main}.
@@ -536,14 +544,14 @@ arguments \texttt{<t1>} and \texttt{<t2>} is inserted at the beginning of
 Sometimes the program might contain definitions of functions that are never
 called. Such functions can be omitted from the instrumentation process because
 the code inserted to these functions would never be executed. To determine what
-functions are called, we first need to build a call graph from the given
-program. Then we search the call graph with the breadth-first search algorithm
-starting from the node that represents the \emph{main} function. All functions
-(or nodes precisely) that were visited during the search are marked as
-reachable. All the other functions are never called and are not instrumented. A
-pointer analysis is necessary for building this graph because functions can be
-called indirectly through function pointers. Therefore, this functionality is
-available only if there is a plugin for a pointer analysis.
+functions can potentially be called, we first need to build a call graph from
+the given program. Then we search the call graph with the breadth-first search
+algorithm starting from the node that represents the \emph{main} function. All
+functions (or nodes precisely) that were visited during the search are marked
+as reachable. All the other functions are never called and are not
+instrumented. A~pointer analysis is necessary for building this graph because
+functions can be called indirectly through function pointers. Therefore, this
+functionality is available only if there is a pointer analyses plugin.
 
 \section{Logging}
 
@@ -553,13 +561,12 @@ logged with a logger. The logger notes following operations:
   \item parsing configuration
   \item loading plugins (also lists the names of the loaded plugins)
   \item the beginning and the end of each phase
-  \item ommitting a function from instrumentation
+  \item omiting a function from instrumentation
   \item rule application and instruction insertion
   \item the end of instrumentation (also logs the name of the resulting file)
 \end{itemize}
-The logger also logs errors such as an error when parsing configuration, invalid
-path to a plugin, unsupported instruction insertion, instrumentation of a
-non-existing function, error when inserting a~new instruction, etc. Logs can be
-found in \emph{log.txt} file that is generated at the end of the
+The logger also logs errors such as an error when parsing configuration,
+invalid path to a plugin, a non-existing function instrumentation, etc. Logs
+can be found in \emph{log.txt} file that is generated at the end of the
 instrumentation process.
 

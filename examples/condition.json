@@ -2,7 +2,7 @@
 [
          {
              "query":["isValidPointer","<t1>","<t2>"],
-             "expectedResult":["false","unknown"]
+             "expectedResult":["false","maybe"]
          },
          {
              "query":["testFlag"],
