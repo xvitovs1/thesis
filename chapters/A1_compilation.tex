@@ -36,7 +36,7 @@ make install
 \end{lstlisting}
 
 \noindent After the successful installation, the tool can be easily used by running the script
-\texttt{instr}, that takes a JSON configuration file and the program in LLVM (or optionally in C if option \texttt{-{}-c} is used) as arguments:
+\texttt{instr}, that takes a JSON configuration file and the program in C (or optionally in LLVM bytecode if option \texttt{-{}-bc} is used) as arguments:
 
 \begin{lstlisting}[language=bash]
 ./instr options config.json program.bc
@@ -45,7 +45,7 @@ make install
 \noindent The options can be following:
 \begin{itemize}
   \item \texttt{-{}-help} shows the information about running the script
-  \item \texttt{-{}-c} means that the given code to be instrumented is in C
+  \item \texttt{-{}-bc} means that the given code is in LLVM
   \item \texttt{-{}-ll} generates also a file in LLVM that is human-readable
 \end{itemize}
 
