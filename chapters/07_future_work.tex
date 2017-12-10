@@ -1,13 +1,13 @@
 In the future, we would like to implement a few more features to our
-instrumentation tool. First fo all, we would like to enable not only insertion
-of instruction, but also their replacement. This might seem a little bit
+instrumentation tool. First of all, we would like to enable not only insertion
+of instructions, but also their replacement. This might seem a little bit
 inconvenient at first sight, since the instrumentation is not supposed to
 modify the given input program, however, a user might for example want to
 replace calls of a function with calls of a function with the same semantics
 but different implementation enriched with some analysis functionality, e.g.
 logging.
 
-Another improvement we would like to implement is insertion of more kinds of
+Another improvement we would like to implement is the insertion of more kinds of
 instructions. As we mentioned earlier, inserting only \texttt{call}
 instructions is sufficient, but we would like the tool to be as general as
 possible.
@@ -16,8 +16,6 @@ Apart from the tool itself, we would also like to come up with new
 configuration files for \symbiotic. Currently, we use \clang to check for
 integer overflows in programs, but in the future, we want to create our own
 configuration for the instrumentation to check for the overflows. This would
-also lead to an implementation of a value analysis. \todo{dopsat}
-
+also lead to an implementation of a value analysis that would be used as a plugin.
 As for memory safety configuration, we want to try replacing the lists for
-preserving records with more efficient structure, such as trees.  \todo{jeste
-neco?}
+preserving records with more efficient structure, such as trees.
