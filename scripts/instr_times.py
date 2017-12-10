@@ -63,19 +63,23 @@ layout = dict(
    xaxis=dict(
         title='The n-th fastest benchmark.',
         titlefont=dict(
-            color='black'
+            color='black',
+            size=14
         ),
         tickfont=dict(
-            color='black'
+            color='black',
+            size=14
         )
    ),
    yaxis=dict(
         title='The time of instrumentation in ms.',
         titlefont=dict(
-            color='black'
+            color='black',
+            size=14
         ),
         tickfont=dict(
-            color='black'
+            color='black',
+            size=16
         )
    ),
    legend=dict(

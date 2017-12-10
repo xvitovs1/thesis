@@ -24,7 +24,8 @@ answers \emph{true}. If some error location is reachable, it answeres
 \emph{false} and gives information about a type of the error (e.g.  invalid
 dereference or memory leak). If \symbiotic cannot decide the reachability, it
 answers \emph{unknown}. If it runs out of time, i.e.~the given time limit
-was exceeded, the answer is \emph{timeout}.
+was exceeded, the answer is \emph{timeout}. All \emph{true} and \emph{false}
+answers \symbiotic gave were correct.
 
 All the following measurements were taken on machines with \textit{Intel(R)
 Core(TM) i7-3770} CPU that run on 3.40GHz frequency and dispose of 8~GB of
@@ -106,7 +107,9 @@ limit. With a pointer analysis, the number of timeouts slightly decreased. The
 most significant improvement was achieved with the staged instrumentation:
 \symbiotic ran out of time only in 71 cases. The both enhancements had impact
 especially on the benchmarks that did not contain any violation of memory
-safety.
+safety. Observe that \symbiotic was able to reveal the memory violations in
+almost all benchmarks that were labeled as unsafe in the given time limit with
+all the configurations of instrumentation.
 
 We also measured the CPU running times of the instrumentation process. The
 instrumentation using the basic approach took approximately 40~ms on average.
@@ -121,3 +124,61 @@ insignificantly as showed in Figure~\ref{fig:times_chart}.
   \label{fig:times_chart}
 \end{figure}
 
+\section{SV-COMP 2018}
+
+\symbiotic proved its abilities in SV-COMP~2018, where it took the first place
+in the official \emph{MemSafety} categories. There were 326 benchmarks in
+total\footnote{\url{https://sv-comp.sosy-lab.org/2018/benchmarks.php}}.
+
+\begin{table}[!t]
+\begin{center}\setlength{\tabcolsep}{5pt}
+\begin{tabular}{cccccccc}
+\toprule[1pt]
+&& \multicolumn{2}{c}{\bf \symbiotic}
+& \multicolumn{2}{c}{\bf \textsc{PredatorHP}}
+& \multicolumn{2}{c}{\bf \textsc{UKojak}}\\
+\cmidrule[.8pt](lr{.5em}){3-4}
+\cmidrule[.8pt](lr{.5em}){5-6}
+\cmidrule[.8pt](lr{.5em}){7-8}
+\mr{category} &\scriptsize number of
+& \mr{solved} &\scriptsize safe
+& \mr{solved} &\scriptsize safe
+& \mr{solved} &\scriptsize safe\\
+%\cmidrule(lr{.75em}){4-4} \cmidrule(lr{.75em}){6-6} \cmidrule(lr{.75em}){8-8}
+\cline{4-4} \cline{6-6} \cline{8-8}
+& \scriptsize benchmarks
+&&\scriptsize unsafe &&\scriptsize unsafe &&\scriptsize unsafe\\
+\midrule[1pt]
+% --------------------------------------------------------------------------------------
+\mr{Arrays} & \mr{69}      & \mb{62}  &\scriptsize 44 & \mr{7} &\scriptsize 0 & \mr{44}  &\scriptsize 27 \\
+\cline{4-4}\cline{6-6}\cline{8-8}
+           &               &        &\scriptsize 18 &          &\scriptsize 7 &           &\scriptsize 17 \\
+\midrule
+\mr{Heap} & \mr{180}    & \mr{145} &\scriptsize 55 & \mb{148} &\scriptsize 66 & \mr{51} &\scriptsize 26 \\
+\cline{4-4}\cline{6-6}\cline{8-8}
+          &                &       &\scriptsize 90 &          &\scriptsize 82 &         &\scriptsize 25\\
+\midrule
+\mr{LinkedLists} & \mr{51} & \mr{27} &\scriptsize 3 & \mb{43} &\scriptsize 19 & \mr{4}  &\scriptsize 0 \\
+\cline{4-4}\cline{6-6}\cline{8-8}
+          &      &                 &\scriptsize 24 &          &\scriptsize 24 &          &\scriptsize 4\\
+\midrule
+\mr{Other} & \mr{26}       & \mb{26} &\scriptsize 23& \mr{18} &\scriptsize 16 & \mr{23} &\scriptsize 23 \\
+\cline{4-4}\cline{6-6}\cline{8-8}
+          &      &                  &\scriptsize 3 &          &\scriptsize 2 &         &\scriptsize 0 \\
+\midrule[1pt]
+
+\mr{total} & \mr{326} & \mb{260} &\scriptsize 125 & \mr{216} &\scriptsize 101 & \mr{122} &\scriptsize 76  \\
+\cline{4-4}\cline{6-6}\cline{8-8}
+           &          &          &\scriptsize 135 &          &\scriptsize 115 &         &\scriptsize 46\\
+\bottomrule[1pt]
+\end{tabular}
+\vspace*{1em}
+\caption{Numbers of solved benchmarks by each of the compared tools.}
+\label{tab:results}
+\end{center}
+\end{table}
+
+In Table~\ref{tab:results} we show the results of \symbiotic,
+\textsc{PredatorHP} which was placed second, and with \textsc{UKojak} which was
+third. The results were published at the official website of
+SV-COMP~2018\footnote{\url{https://sv-comp.sosy-lab.org/2018/results/results-verified/}}.

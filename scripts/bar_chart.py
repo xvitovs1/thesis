@@ -28,18 +28,22 @@ pStaged = (afterStaged - beforeStaged) / (beforeStaged/100)
 layout = go.Layout(
 	xaxis=dict(
         titlefont=dict(
-            color='black'
+            color='black',
+            size=14
         ),
         tickfont=dict(
-            color='black'
+            color='black',
+            size = 14
         )
    ),
    yaxis=dict(
         titlefont=dict(
-            color='black'
+            color='black',
+            size=14
         ),
         tickfont=dict(
-            color='black'
+            color='black',
+            size=14
         )
    )
 )

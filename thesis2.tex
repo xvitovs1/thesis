@@ -28,7 +28,7 @@
   main=english, %% By using `czech` or `slovak` as the main locale
                 %% instead of `english`, you can typeset the thesis
                 %% in either Czech or Slovak, respectively.
-  english,czech %% The additional keys allow
+  english %% The additional keys allow
 ]{babel}        %% foreign texts to be typeset as follows:
 %%
 %%   \begin{otherlanguage}{german}  ... \end{otherlanguage}
@@ -39,8 +39,13 @@
 %% For non-Latin scripts, it may be necessary to load additional
 %% fonts:
 \usepackage{paratype}
+\usepackage{booktabs}
+\usepackage{multicol, makecell, multirow}
 \def\textrussian#1{{\usefont{T2A}{PTSerif-TLF}{m}{rm}#1}}
 \newcommand{\symbiotic}{\textsc{Symbiotic}\xspace}
+\newcommand{\mr}[1]{\multirow{2}{*}{#1}}
+\newcommand{\mb}[1]{\multirow{2}{*}{\bf\color{blue}#1}}
+
 %%
 %% The following section sets up the metadata of the thesis.
 \thesissetup{
