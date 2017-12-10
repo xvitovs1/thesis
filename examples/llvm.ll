@@ -1,7 +1,7 @@
 @number = global i32 10
 
 define void @foo() {
-  %a = alloca [10 x i32]
+  %arr = alloca [10 x i32]
   %1 = load i32, i32* @number
   %2 = getelementptr inbounds [10 x i32],
        [10 x i32]* %a, i64 0, i64 5

@@ -41,7 +41,7 @@ instructions that should be instrumented.
 To summarize, the \textsc{LLVMPin} framework is one of a few instrumentation
 tools for LLVM IR that are general and configurable, but it does not simplify
 the work for the user in terms of writing a code that performs the core of the
-instrumentation processi very much.
+instrumentation process very much.
 
 \section{Other Tools}
 
@@ -64,7 +64,7 @@ detection (e.g. signed integer overflows) by instrumenting all operations that m
 lead to undefined behaviour with a check. All these sanitizers modify the code
 during compilation and insert run-time checks. Disadvantage is a slowdown and
 memory overhead these tools introduce, however, the overhead introduced by other
-tools that are designed for similar purposes is usually higher.
+tools that are designed for similar purposes is usually higher~\cite{tsan,asan}.
 
 \textsc{SAFECode}~\cite{safecode} (Static Analysis For safe Execution of Code,
 licensed under University of Illinois/NCSA Open Source License) is a~tool
@@ -84,7 +84,7 @@ reduce the number of inserted checks. Like \symbiotic, it uses the symbolic
 executor \klee~\cite{klee} to check reachability of error locations.
 
 \textsc{Loom}~\cite{loom} (licensed under their own license available at the
-homepage of \textsc{Loom}\footnote{https://github.com/cadets/loom}) and
+homepage of \textsc{Loom}\footnote{\url{https://github.com/cadets/loom}}) and
 \textsc{LLVM IR Trace Profiler}~\cite{tracer} (\textsc{LLVM-Tracer}, licensed
 under BSD 3-clause) are tools used for code profiling. Both of them dynamically
 gather information about the program that is being analyzed.

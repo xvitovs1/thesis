@@ -31,13 +31,13 @@ variable can be assigned only at one location in the code. It uses:
 \begin{itemize}
     \item global identifiers that begin with the '@' character for functions
     and global variables, for example the global variable \texttt{@number} in
-    Figure~\ref{fig:llvm_example}, and
+    Figure~\ref{fig:llvm_example}
     \item local identifiers that begin with the '\%' character for register
     names and types, for example the local variable \texttt{\%a} in
-    Figure~\ref{fig:llvm_example}.
+    Figure~\ref{fig:llvm_example}
 \end{itemize}
 
-Variables can be named or unnnamed. Identifiers for unnamed variables are
+Variables can be named or unnamed. Identifiers for unnamed variables are
 represented as unsigned numbers with a corresponding prefix (e.g.~local
 identifier \texttt{\%1} in Figure~\ref{fig:llvm_example}).
 
@@ -85,8 +85,8 @@ will follow. It represents either conditional branching:
 
 \texttt{br i1 <condition>, label <true>, label <false>},
 
-transfering the control flow to \texttt{true} block if the \texttt{condition} holds and to
-\texttt{false} block otherwise, or uncoditional branching:
+transferring the control flow to \texttt{true} block if the \texttt{condition} holds and to
+\texttt{false} block otherwise, or unconditional branching:
 
 \texttt{br label <b>},
 
@@ -104,25 +104,24 @@ to store and the address of a target memory.
 It can be used for example to get the address of an element of an array.
 \end{description}
 We can see the usage of these instructions in Figure~\ref{fig:llvm_example} in
-function \texttt{foo}. The \texttt{alloca} instruction on line ~4 allocates an
-array \texttt{a} of ten 32-bit integers on the stack. The \texttt{load}
-instruction on line~5 reads the value of global variable \texttt{number} and
+the function \texttt{foo}. The \texttt{alloca} instruction on the line~4 allocates an
+array \texttt{arr} of ten 32-bit integers on the stack. The \texttt{load}
+instruction on the line~5 reads the value of the global variable \texttt{number} and
 names it as \texttt{\%1}. The value is later stored to \texttt{\%2} on line~8.
-\texttt{\%2} is the address of the fifth element of \texttt{a} since the
-\texttt{getelementptr} instruction was used on line~6 on the array \texttt{a}
+\texttt{\%2} is the address of the fifth element of the array~\texttt{arr} since the
+\texttt{getelementptr} instruction was used on the line~6 on the array \texttt{arr}
 with the last operand equal to 5.
 
-Other relevant instructions are \texttt{call} instruction and \texttt{bitcast}
-instruction:
+Other relevant instructions are \texttt{call} and \texttt{bitcast}:
 \begin{description}
 \item[\texttt{call}] instruction calls a function given as its
-operand together with function's arguments,
+operand together with function's arguments.
 \item[\texttt{bitcast}] converts a given value to a given type, e.g.~\texttt{bitcast i8 1 to
 i32} converts 8-bit integer of value 1 to 32-bit integer of value 1.
 \end{description}
  We can find an example of a \texttt{call} instruction in
  Figure~\ref{fig:llvm_example} in the function \texttt{main} which calls
- function \texttt{foo} on line~15. This instruction can also be used for
+ the function \texttt{foo} on line~15. This instruction can also be used for
  dynamic memory allocation by calling a function for dynamic allocation, e.g.
  \texttt{malloc}.
 
