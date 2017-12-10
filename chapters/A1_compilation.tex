@@ -35,17 +35,26 @@ cmake .
 make install
 \end{lstlisting}
 
-\noindent After the successful installation, the tool can be used by running the script
-\texttt{instr}.
+\noindent After the successful installation, the tool can be easily used by running the script
+\texttt{instr}, that takes a JSON configuration file and the program in LLVM (or optionally in C if option \texttt{-{}-c} is used) as arguments:
 
-\todo{pokracovani}
+\begin{lstlisting}[language=bash]
+./instr options config.json program.bc
+\end{lstlisting}
+
+\noindent The options can be following:
+\begin{itemize}
+  \item \texttt{-{}-help} shows the information about running the script
+  \item \texttt{-{}-c} means that the given code to be instrumented is in C
+  \item \texttt{-{}-ll} generates also a file in LLVM that is human-readable
+\end{itemize}
 
 \subsection{Compiling and running instrumentation within \symbiotic}
 
 If you want to use the instrumentation for checking memory safety within
 \symbiotic, follow the \symbiotic installation
 guide\footnote{\url{https://github.com/staticafi/symbiotic/wiki/Symbiotic}}.
-The instrumentation is build automatically togehther with LLVM and other
+The instrumentation is build automatically together with LLVM and other
 components of \symbiotic. To enable memory safety instrumentation, run
 \symbiotic with the option \texttt{-{}-prp=memsafety}. To see the code after
 the instrumentation, run \symbiotic with the option \texttt{-{}-save-files}.
