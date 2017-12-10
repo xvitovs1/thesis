@@ -1,17 +1,47 @@
 LLVM~\cite{llvm} is an open source project that provides compiler technologies
-designed to be independent of a target architecture. The project has several
-parts: LLVM intermediate representation (LLVM IR, often shorten to LLVM) for
-representation of a source code, LLVM Core libraries for code generation,
-optimization and transformation, and tools such as Clang compiler, LLVM linker
-\texttt{llvm-link} or LLVM optimizer \texttt{opt}. Another important part of
-LLVM project is LLVM Pass Framework, since LLVM passes are programs used for
-transformations and optimizations of LLVM code. In this Chapter, we focus on
-LLVM IR which can be used in three different forms: human readable
-representation, bitcode representation and an in-memory compiler IR. For the
-sake of simplicity, we will work only with the human readable form as all the
-forms are equal and we will refer to it as LLVM from this point on.
+designed to be independent of a programming language and a~target architecture.
+The project has several parts: LLVM intermediate representation (LLVM IR, often
+shortened to LLVM) for representation of a source code, LLVM Core libraries for
+code generation, optimization and transformation, and tools such as Clang
+compiler, LLVM linker \texttt{llvm-link} or LLVM optimizer \texttt{opt}.
+Another important part of LLVM project is LLVM Pass Framework, since LLVM
+passes are programs used for transformations and optimizations of LLVM code. In
+this chapter, we explain the basics of LLVM IR, which can be used in three
+different forms: human readable representation, bitcode representation, and an
+in-memory compiler representation. For the sake of simplicity, we will work
+only with the human readable form as all the forms are equal.
 
-\begin{figure}[h]
+
+\section{LLVM structure}
+
+The high-level structure of an LLVM program consists of modules. Each module
+corresponds to one compilation unit. More modules can be linked together into
+one module with the LLVM linker. They contain global variables and functions.
+
+Each function begins with the \texttt{define} keyword and is composed of basic
+blocks. Basic blocks are sequences of instructions, that have a single entry node
+and a single exit node and there is no branching in them. Basic blocks form
+a control flow graph for a function. In Figure~\ref{fig:llvm_example} we give
+an example of an LLVM module with two function definitions, each containing one
+basic block.
+
+LLVM is in the static single assignment form~\cite{ssa} (SSA form), which means that each
+variable can be assigned only at one location in the code. It uses:
+
+\begin{itemize}
+    \item global identifiers that begin with the '@' character for functions
+    and global variables, for example the global variable \texttt{@number} in
+    Figure~\ref{fig:llvm_example}, and
+    \item local identifiers that begin with the '\%' character for register
+    names and types, for example the local variable \texttt{\%a} in
+    Figure~\ref{fig:llvm_example}.
+\end{itemize}
+
+Variables can be named or unnnamed. Identifiers for unnamed variables are
+represented as unsigned numbers with a corresponding prefix (e.g.~local
+identifier \texttt{\%1} in Figure~\ref{fig:llvm_example}).
+
+\begin{figure}[t]
  \lstinputlisting[language=llvm,style=nasm]{examples/llvm.ll}
  \caption{An example of an LLVM module with function \texttt{main} that calls
  function \texttt{foo} which allocates an array of ten integers and stores the
@@ -19,50 +49,22 @@ forms are equal and we will refer to it as LLVM from this point on.
  \label{fig:llvm_example}
 \end{figure}
 
-\section{LLVM structure} %TODO rename the chapter to LLVM IR?
-
-The high-level structure of an LLVM program consists of modules. Each module
-corresponds to one compilation unit. More modules can be linked together into
-one module with the LLVM linker. They contain global variables and functions.
-
-Each function begins with a \texttt{define} keyword and is composed of basic
-blocks. Basic blocks are sequences of instructions, that have a single entry node
-and a single exit node and there is no branching in them. Basic blocks form
-a control flow graph for a function. In Figure~\ref{fig:llvm_example} we give
-an example of an LLVM module with two function definitions, each containing one
-basic block.
-
-LLVM is in static single assignment form~\cite{ssa} (SSA form), which means that each
-variable can be assigned only at one location in the code. It uses:
-
-\begin{itemize}
-    \item global identifiers that begin with the '@' character for functions
-    and global variables, for example global variable \texttt{@number} in
-    Figure~\ref{fig:llvm_example}, and
-    \item local identifiers that begin with the '\%' character for register
-    names and types, for example a local variable \texttt{\%a} in
-    Figure~\ref{fig:llvm_example}.
-\end{itemize}
-
-As values can be named or unnnamed, identifiers for unnamed values are
-represented as unsigned numbers with a corresponding prefix (e.g. local
-identifier \texttt{\%1} in Figure~\ref{fig:llvm_example}).
-
 \section{LLVM types}
 
 LLVM is a strongly typed language. There are simple types such as integer type
-(e.g. \texttt{i32} for a 32-bit integer), floating point types (e.g.
-\texttt{float} or \texttt{double}) and pointer type (e.g. \texttt{i32*} for a
-pointer to a 32-bit integer), and also types for vectors (e.g. \texttt{<10 x
-i32>} for a vector of ten 32-bit integers), arrays (e.g. \texttt{[10 x i32]}
-for an array of ten 32-bit integers) and structures (e.g. \texttt{\{i32, i32\}}
-for a pair of 32-bit integers). Observe that in Figure~\ref{fig:llvm_example}
-the global variable \texttt{number} is a 32-bit integer and
-\texttt{a} is an array of ten 32-bit integers.
+(e.g.~\texttt{i32} for a 32-bit integer), floating point types
+(e.g.~\texttt{float} or \texttt{double}) and pointer type (e.g.~\texttt{i32*}
+for a pointer to a 32-bit integer), and also types for vectors
+(e.g.~\texttt{<10 x i32>} for a vector of ten 32-bit integers), arrays
+(e.g.~\texttt{[10 x i32]} for an array of ten 32-bit integers) and
+structures (e.g.~\texttt{\{i32, i32\}} for a pair of 32-bit integers).
+Observe that in Figure~\ref{fig:llvm_example} the global variable
+\texttt{number} is a 32-bit integer and \texttt{a} is an array of ten
+32-bit integers.
 
 \section{Basic instructions}
 
-In this section, we describe the most important instructions for this work. The
+In this section, we describe the most important instructions for this thesis. The
 complete list of instructions can be found in the LLVM
 documentation\footnote{\url{https://llvm.org/docs/LangRef.html}}.
 
@@ -91,22 +93,24 @@ transfering the control flow to \texttt{true} block if the \texttt{condition} ho
 transfering the control flow to the block \texttt{b} unconditionally.
 \end{description}
 
-The most important instructions for working with memory are \texttt{load}
+The most important instructions for working with memory are \texttt{load},
 \texttt{store}, \texttt{alloca} and \texttt{getelementptr}:
 \begin{description}
-\item[\texttt{load}] is used to read from memory specified by its operand,
+\item[\texttt{load}] is used to read from memory specified by its operand.
 \item[\texttt{store}] is used to write to memory and has two operands: a value
-to store and address of a target memory.
+to store and the address of a target memory.
 \item[\texttt{alloca}] allocates memory on the stack.
-\item[\texttt{getelementptr}] gets the address of some element of an aggregate
+\item[\texttt{getelementptr}] gets the address of some element of an aggregate.
+It can be used for example to get the address of an element of an array.
 \end{description}
 We can see the usage of these instructions in Figure~\ref{fig:llvm_example} in
-function \texttt{foo}, where an array \texttt{a} of ten 32-bit integers is
-allocated on the stack with the \texttt{alloca} instruction on line 4, value of
-global variable \texttt{number} is loaded and named as \texttt{\%1} on line 5
-and later stored to \texttt{\%2} on line 8, which is the address of the fifth
-element of \texttt{a} since the \texttt{getelementptr} instruction was used on
-line 6.
+function \texttt{foo}. The \texttt{alloca} instruction on line ~4 allocates an
+array \texttt{a} of ten 32-bit integers on the stack. The \texttt{load}
+instruction on line~5 reads the value of global variable \texttt{number} and
+names it as \texttt{\%1}. The value is later stored to \texttt{\%2} on line~8.
+\texttt{\%2} is the address of the fifth element of \texttt{a} since the
+\texttt{getelementptr} instruction was used on line~6 on the array \texttt{a}
+with the last operand equal to 5.
 
 Other relevant instructions are \texttt{call} instruction and \texttt{bitcast}
 instruction:
