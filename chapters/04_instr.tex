@@ -228,17 +228,18 @@ several fields:
         analysis, this field can be used only when the analysis is available as
         a~plugin.
 
-        In Figure~\ref{fig:findInstrs_example} we give an example of
-        a \texttt{findInstructions} field. We are searching for a sequence of
+        In Figure~\ref{fig:findInstrs_example} we give an example of a
+        \texttt{findInstructions} field. We are searching for a sequence of
         instructions of length one, namely for a \texttt{store} instruction.
         Since \texttt{store} does not return any value, the
-        \texttt{returnValue} field is set to "*". The two operands of
-        \texttt{store} will be stored in variables \texttt{<t1>} and
-        \texttt{<t2>}, size of the type of the value that is being stored will
-        be kept in the variable \texttt{<t3>}. \texttt{<t4>} will contain the
-        size of the allocated memory to which the pointer in \texttt{<t2>}
-        points to and \texttt{<t5>} will contain the \texttt{alloca}
-        instruction that allocated this memory.
+        \texttt{returnValue} field is set to "*". The second operand of
+        \texttt{store} will be stored in variables \texttt{<t1>} (the first one
+        will be skipped as it is set to "*"), size of the type
+        of the value that is being stored will be kept in the variable
+        \texttt{<t2>}. \texttt{<t3>} will contain the size of the allocated
+        memory to which the pointer in \texttt{<t1>} points to and
+        \texttt{<t4>} will contain the \texttt{alloca} instruction that
+        allocated this memory.
 
         \begin{minipage}{\linewidth}
         \lstset{
@@ -321,7 +322,7 @@ several fields:
     \item[\texttt{setFlags}] List of pairs \texttt{[flag, value]} that sets all
     \texttt{flags} to the corresponding \texttt{value} if the rule was applied.
     This field is optional. We give an example of this field in
-    Figure~\ref{fig:setFlags_example}, which sets the flag \texttt{loadPresent}
+    Figure~\ref{fig:setFlags_example}, which sets the flag \texttt{loadFlag}
     to \emph{"true"} and the flag \texttt{testFlag} to \emph{false}.
 
      \begin{minipage}{\linewidth}

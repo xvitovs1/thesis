@@ -1,5 +1,1 @@
-"setFlags":
-[
-    ["loadPresent","true"],
-    ["testFlag","false"]
-]
+"setFlags":[["loadFlag","true"],["testFlag","false"]]
