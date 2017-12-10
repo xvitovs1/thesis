@@ -7,10 +7,10 @@ replace calls of a function with calls of a function with the same semantics
 but different implementation enriched with some analysis functionality, e.g.
 logging.
 
-Another improvement we would like to implement is the insertion of more kinds of
-instructions. As we mentioned earlier, inserting only \texttt{call}
-instructions is sufficient, but we would like the tool to be as general as
-possible.
+Another improvement we would like to implement is the possibility to determine
+what plugin should be questioned when evaluating a query. The queries are often
+intended for concrete plugin and it is therefore pointless to question all
+plugins at once.
 
 Apart from the tool itself, we would also like to come up with new
 configuration files for \symbiotic. Currently, we use \clang to check for
