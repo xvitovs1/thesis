@@ -40,7 +40,7 @@ also need to bootstrap the library \texttt{dg} for the pointer analysis:
 \noindent Now configure and install the project using:
 
 \begin{lstlisting}[language=bash]
-cmake .
+cmake -DCMAKE_INSTALL_PREFIX=. -DCMAKE_INSTALL_LIBDIR=bin .
 make install
 \end{lstlisting}
 

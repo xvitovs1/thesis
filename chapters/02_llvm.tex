@@ -4,19 +4,20 @@ The project has several parts: LLVM intermediate representation (LLVM IR, often
 shortened to LLVM) for representation of a source code, LLVM Core libraries for
 code generation, optimization and transformation, and tools such as Clang
 compiler, LLVM linker \texttt{llvm-link} or LLVM optimizer \texttt{opt}.
-Another important part of LLVM project is LLVM Pass Framework, since LLVM
+Another important part of LLVM system is LLVM Pass Framework, since LLVM
 passes are programs used for transformations and optimizations of LLVM code. In
 this chapter, we explain the basics of LLVM IR, which can be used in three
 different forms: human readable representation, bitcode representation, and an
 in-memory compiler representation. For the sake of simplicity, we will work
-only with the human readable form as all the forms are equal.
+only with the human readable form as all the forms are equivalent.
 
 
 \section{LLVM structure}
 
 The high-level structure of an LLVM program consists of modules. Each module
-corresponds to one compilation unit. More modules can be linked together into
-one module with the LLVM linker. They contain global variables and functions.
+corresponds to one compilation unit (source file). More modules can be linked
+together into one module with the LLVM linker. A module contains global
+variables and functions.
 
 Each function begins with the \texttt{define} keyword and is composed of basic
 blocks. Basic blocks are sequences of instructions, that have a single entry node
@@ -59,7 +60,7 @@ for a pointer to a 32-bit integer), and also types for vectors
 (e.g.~\texttt{[10 x i32]} for an array of ten 32-bit integers) and
 structures (e.g.~\texttt{\{i32, i32\}} for a pair of 32-bit integers).
 Observe that in Figure~\ref{fig:llvm_example} the global variable
-\texttt{number} is a 32-bit integer and \texttt{a} is an array of ten
+\texttt{number} is a 32-bit integer and \texttt{arr} is an array of ten
 32-bit integers.
 
 \section{Basic instructions}
@@ -73,20 +74,20 @@ and it determines how the control flow will continue. For our purpose we will
 describe only two of the terminator instructions: \texttt{ret} and \texttt{br}.
 
 \begin{description}
-\item[\texttt{ret}] is used to return from a function to a basic block
-from which the function was called. It has one optional argument that represent
-a return value of the function. In Figure~\ref{fig:llvm_example} we can see the
-two variants of this instruction: in function \texttt{foo}, there is a
-\texttt{ret void} instruction, because this function does not return any value,
-whereas function \texttt{main} returns 0 (\texttt{ret i32 0}).
+\item[\texttt{ret}] is used to return from a function to a basic block from
+which the function was called. It has one optional argument that represents a
+return value of the function. In Figure~\ref{fig:llvm_example} we can see the
+two variants of this instruction: in function \texttt{foo}, there is
+a~\texttt{ret void} instruction, because this function does not return any
+value, whereas function \texttt{main} returns 0 (\texttt{ret i32 0}).
 
 \item[\texttt{br}] determines which basic block from the current function
-will follow. It represents either conditional branching:
+will follow. It represents either a conditional branching:
 
 \texttt{br i1 <condition>, label <true>, label <false>},
 
 transferring the control flow to \texttt{true} block if the \texttt{condition} holds and to
-\texttt{false} block otherwise, or unconditional branching:
+\texttt{false} block otherwise, or an unconditional branching:
 
 \texttt{br label <b>},
 
@@ -100,7 +101,7 @@ The most important instructions for working with memory are \texttt{load},
 \item[\texttt{store}] is used to write to memory and has two operands: a value
 to store and the address of a target memory.
 \item[\texttt{alloca}] allocates memory on the stack.
-\item[\texttt{getelementptr}] gets the address of some element of an aggregate.
+\item[\texttt{getelementptr}] gets the address of sn element of an aggregate type.
 It can be used for example to get the address of an element of an array.
 \end{description}
 We can see the usage of these instructions in Figure~\ref{fig:llvm_example} in
