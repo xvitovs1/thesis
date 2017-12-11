@@ -372,10 +372,11 @@ auxiliary list by setting the field \texttt{remember} in the configuration file.
 
 In the second phase, we insert \texttt{\_\_INSTR\_remember*} calls. For every
 memory allocation, we first check whether the underlying memory location has
-been remembered in the first phase. \todo{describe checking?} If it has, we
-create a record for this allocation because a check that can use this record
-was inserted in the first stage. Otherwise, this memory allocation is not
-instrumented.
+been remembered in the first phase with the query
+\texttt{isRemembered(memory\_location)} to the extended pointer analysis. If it
+has, we create a record for this allocation because a check that can use this
+record was inserted in the first stage. Otherwise, this memory allocation is
+not instrumented.
 
 The only exception are memory allocations on the heap. As we need to
 create these records always due to the check for memory leaks at the
