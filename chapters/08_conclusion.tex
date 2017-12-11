@@ -1,20 +1,19 @@
-Within this thesis, we listed tools that use instrumentation of LLVM~IR and
-explained the need for a new tool for instrumentation that is not focused at
-only one application, but is general and can be configured by user.
-
-We implemented the tool such that it can be easily configured with two files
-provided by user. Moreover, the tool can use results of other programs for
-static analyses to get necessary information to reduce the amount of the
+Within this thesis, we listed tools that perform instrumentation of LLVM~IR. We
+designed and implemented a new tool for general instrumentation of LLVM IR such
+that it can be easily configured with two files provided by a user. Moreover,
+the tool can use results of static analyzers to reduce the amount of the
 inserted code.
 
-We also created a configuration for this tool that can be used to check memory
+We also created a~configuration for this tool that is aimed at checking memory
 safety of programs. We improved this configuration with two enhancements:
-first, we employed a pointer analysis to find out if it can itself decide
-whether a pointer dereference is valid, and then we divided the instrumentation
-into stages to leave some of the memory allocations from the instrumentation.
+(i)~we employed a~pointer analysis to find out if it can itself decide
+whether a pointer dereference is valid, and (ii)~we divided the instrumentation
+into stages to omit some of the memory allocations from the instrumentation.
 Both of these enhancements led to a smaller amount of inserted code and
 therefore to a~faster analysis of the code.
 
-Finally, we evaluated the configuration for checking memory safety by employing
-the instrumentation to the tool \symbiotic and running it on a set of
-benchmarks from SV-COMP.
+Finally, we evaluated the configurations for checking memory safety by
+employing the instrumentation in the tool \symbiotic and running it on a set of
+benchmarks from SV-COMP. The enhanced configurations proved to be of great
+benefit as \symbiotic won the first place in category \emph{MemSafety}
+in SV-COMP~2018.
