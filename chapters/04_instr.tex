@@ -40,7 +40,7 @@ would not need to implement the core of instrumentation routine as with
     \parbox{3cm}{\textsf{1. phase \\ 2. phase \\ \vdots}}};
     \node [block-sharp] (instrprogram) at (0, -5.5) {\textsf{Instrumented program in LLVM}};
     \node [block-sharp] (defs) at (4.5, -2.75) {\textsf{Definitions of
-    instrumented functions in LLVM}};
+    instrumentation functions in LLVM}};
     % connect all nodes defined above
     \draw[line] (cprogram) -> (llvmprogram);
     \draw[line-dashed] (llvmprogram) -> (instr);
@@ -86,7 +86,7 @@ to be concentrated on memory safety. However, it can still be used also for
 general instrumentation.
 
 \section{Intuition for Instrumentation Rules}
-The instrumentation rules determine what instructions will be instrumented and
+The instrumentation rules determine how instructions will be instrumented and
 when. There is a set of rules for each phase of the instrumentation. The first
 part of an instrumentation rule is a sequence of instructions that should be
 instrumented. The second part is the definition of the new instruction that
@@ -94,8 +94,9 @@ will be inserted if the sequence is matched and the placement of this
 instruction (e.g.~after the matched sequence). A user can additionally specify
 conditions, under which a~rule should be applied. In order to pass some
 information between phases, it is also possible to define flags that can be set
-during a rule's application. The detailed description of instrumentation rules
-can be found in Section~\ref{sec:config}.
+during a rule's application or to remember values of variables in an auxiliary
+list. The detailed description of the instrumentation rules can be found in
+Section~\ref{sec:config}.
 
 Another useful feature are plugins. Plugins are external analyses that can
 evaluate queries on values from the program that is being instrumented. The
@@ -160,11 +161,13 @@ Currently, the following queries with their corresponding meanings are available
   \texttt{p} points to be accessed at the given \texttt{offset}?
   \item[hasKnownSize(object)] Can we statically determine the size of the memory
          object that is being dereferenced?
-  \item[pointsTo(p,a)] Can the given pointer \texttt{p} point to the value \texttt{a}?
-  \item[isNull(p)] Can the given pointer \texttt{p} point to NULL?
+  \item[pointsTo(p,a)] Does the given pointer \texttt{p} point to the value \texttt{a}?
+  \item[isNull(p)] Does the given pointer \texttt{p} point to NULL?
   \item[isRemembered(value)] Was the given value or a pointer to the value
-  stored with a \texttt{remember} field? (see Section~\ref{sec:config} for more
-  information)
+  stored remembered in an auxiliary list in an earlier phase? This information
+  needs to be evaluated by a plugin (more precisely by a plugin performing a
+  pointer analysis) because we ask not only about the value itself, but also
+  about pointers to the value.
 \end{description}
 The default answer for all these queries is \emph{``unknown''} and it is
 supposed to be given by the plugins that are not able to evaluate the query. In
@@ -195,15 +198,15 @@ of a condition.
 A JSON file with instrumentation rules has to contain the following fields:
 
 \begin{center}
-\begin{tabular}[h]{>{\bfseries}p{4.2cm} | p{7.8cm}}
+\begin{tabular}[h]{>{\bfseries}p{4.3cm} | p{7.7cm}}
   \texttt{file}                & Path to the file with definitions of instrumentation functions. \\
   \hline
   \texttt{analyses}            & List of paths to plugins. \\
   \hline
   \texttt{flags}               & List of flags that can be set during instrumentation. \\
-  \hline
-  \texttt{phases}              & List of instrumentation phases. Each phase contains a
-                                 list of \texttt{instructionRules}. \\
+  \hline \texttt{phases}              & List of instrumentation phases. Each
+  phase contains a list of \texttt{instructionRules}. The phases are processed
+  in the order given by their position in the list. \\
   \hline
   \texttt{globalVariablesRules} & List of rules for instrumenting global
                                  variables.
@@ -361,11 +364,11 @@ fields:
 \begin{description}
     \item[\texttt{findGlobals}:] Contains a mandatory field
     \texttt{globalVariable} that stores the value of a global variable to the
-    given variable, and an optional field \texttt{getTypeSize} that gets the size
-    of the type of the global variable. The field \texttt{findGlobals} in
-    Figure~\ref{fig:findGlobals_example} stores the value of a global variable
-    to the variable \texttt{<t1>} and stores the size of its type in
-    \texttt{<t2>}.
+    given variable, and an optional field \texttt{getTypeSize} that gets the
+    size of the type of the global variable. In
+    Figure~\ref{fig:findGlobals_example} the field \texttt{findGlobals} stores
+    the value of a global variable in \texttt{<t1>} and stores the
+    size of its type in \texttt{<t2>}.
 
     \begin{minipage}{\linewidth}
         \lstset{
@@ -386,6 +389,8 @@ fields:
     instruction will be inserted.
     \item[\texttt{conditions}:] The same as in \texttt{instructionRule}.
 \end{description}
+
+\subsection{Instrumentation Functions}
 
 The functions whose calls are instrumented into a code must be defined in a
 file specified by the \texttt{file} field in the JSON configuration. The
@@ -504,7 +509,7 @@ for global variables are applied. That is, for each rule for global variables,
     escapeinside={<@}{@>}
 }
 
-\begin{figure}[h]
+\begin{figure}[t]
 \lstinputlisting{examples/json_example.json}
 \caption{Example of an \texttt{instructionRule} in a JSON configuration file.}
 \label{fig:json_example}
@@ -524,7 +529,7 @@ type that is being loaded is stored to a variable \texttt{<t2>} and the conditio
 After a successful application of this rule, flag \texttt{loadPresent} is set
 to \emph{true}.
 
-\begin{figure}[h]
+\begin{figure}[t]
 \lstinputlisting{examples/json_example2.json}
 \caption{Example of a \texttt{globalVariablesRule} in a JSON configuration file.}
 \label{fig:json_example2}
