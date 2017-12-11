@@ -56,7 +56,7 @@ The basic idea of our instrumentation tool is depicted in
 Figure~\ref{fig:scheme}. Since it works on top of LLVM, the given program that
 is supposed to be instrumented has to be translated to LLVM first.
 Instrumentation is required to be configurable, therefore it needs to be
-supplied with two config files created by a user: a JSON file with
+supplied with two configuration files created by a user: a JSON file with
 instrumentation rules and a~file with definitons of so called
 \emph{instrumentation functions} whose calls will be inserted into the code and
 a JSON file with instrumentation rules. The instrumentation rules define how
@@ -79,15 +79,16 @@ pointless to insert a check for memory leaks if there is no call to
 \emph{malloc} can be noted in the first phase, and the check for memory leaks
 can be inserted in a later phase according to the noted information.
 
-Since this tool for instrumentation was originally implemented in order to
-enable checking memory safety in \symbiotic, some of the features described in
-this chapter were added just for this purpose. Therefore, the tool might seem
-to be concentrated on memory safety. However, it can still be used also for
-general instrumentation.
+This tool for instrumentation was originally motivated by extending
+capabilities of \symbiotic to check memory safety, which is currently the most
+prominent application of the tool. We believe that the developed features of
+the instrumentation tool can be applied also in other contexts. Moreover, the
+tool is designed to be easily extensible to provide other features.
+
 
 \section{Intuition for Instrumentation Rules}
-The instrumentation rules determine how instructions will be instrumented and
-when. There is a set of rules for each phase of the instrumentation. The first
+The instrumentation rules determine which instructions will be instrumented and
+how. There is a set of rules for each phase of the instrumentation. The first
 part of an instrumentation rule is a sequence of instructions that should be
 instrumented. The second part is the definition of the new instruction that
 will be inserted if the sequence is matched and the placement of this
@@ -98,9 +99,9 @@ during a rule's application or to remember values of variables in an auxiliary
 list. The detailed description of the instrumentation rules can be found in
 Section~\ref{sec:config}.
 
-Another useful feature are plugins. Plugins are external analyses that can
-evaluate queries on values from the program that is being instrumented. The
-queries might be used in conditions for the instrumentation rules.
+Another useful feature are plugins. Plugins perform external analyses that can
+evaluate queries about the program that is being instrumented. The
+queries can be used in conditions for the instrumentation rules.
 
 \section{Conditions}\label{sec:conditions}
 
@@ -128,7 +129,7 @@ is satisfied.
 As mentioned above, in order to pass some information between phases a user can
 define flags in a JSON file with instrumentation rules. When inserting a~call
 to a function, it is possible to set a flag and, in a later phase, condition
-some rule by a check whether the flag is set to the given value (see
+some rule by a check whether the flag is set to a given value (see
 Section~\ref{sec:conditions}).  For example, the user might want to set a flag
 \texttt{malloc-instrumented} to \emph{true} when instrumenting a~call to
 \emph{malloc} in the first phase of the instrumentation, and to insert a~check
@@ -136,48 +137,49 @@ for memory leaks at the end of \emph{main} in the second phase only if the flag
     is set to \emph{true}, i.e.~if there is a call to \emph{malloc} somewhere
     in the program.
 
-The instrumentation module can also be extended by plugins that can reply to
-queries, which are basically questions that can be decided by a plugin. Plugins
+The instrumentation tool can also be extended by plugins that can reply to
+queries, which are basically questions that can be decided by a~plugin. Plugins
 can reply with a string, i.e.~a~plugin can for example answer
 with~\emph{``maybe''}.  To define a list of possible queries, we require the
 plugins to implement a given interface. The interface describes a set of
-callbacks that correspond to the queries and return string values. For example,
+functions that return string values and correspond to the queries. For example,
 a query ``Can pointers \texttt{p1} and \texttt{p2} point to the same memory
-location?'' can correspond to a callback \texttt{pointersCanBeEqual(p1, p2)}.
-These functions can be redefined by concrete plugins that are able to decide
+location?'' can correspond to a function \texttt{pointersCanBeEqual(p1, p2)}.
+These functions can be realized by concrete plugins that are able to decide
 the corresponding queries, e.g.~the function \texttt{pointersCanBeEqual} can be
-redefined by a plugin performing a pointer analysis, since with this analysis
+realized by a plugin performing a pointer analysis, since with this analysis
 it is possible to determine whether two pointers can point to the same memory
-location. Since each plugin is able to answer to only a subset of the queries
+location. Since each plugin is able to answer a~subset of the queries
 according to its specialization, there are default answers for queries that
 cannot be decided by the given plugin. For example, the default answer for the
 query ``Can pointers \texttt{p1} and \texttt{p2} point to the same memory
-location?'' can be \emph{``unknown''}.
+location?'' is \emph{``unknown''}.
 
 Currently, the following queries with their corresponding meanings are available:
 \begin{description}
   \item[isValidPointer(p, offset)] Is a dereference of a pointer \texttt{p}
   valid operation? More precisely, can the memory block to which the pointer
-  \texttt{p} points to be accessed at the given \texttt{offset}?
+  \texttt{p} points to be accessed at the given \texttt{offset} from the pointer?
   \item[hasKnownSize(object)] Can we statically determine the size of the memory
          object that is being dereferenced?
   \item[pointsTo(p,a)] Does the given pointer \texttt{p} point to the value \texttt{a}?
   \item[isNull(p)] Does the given pointer \texttt{p} point to NULL?
   \item[isRemembered(value)] Was the given value or a pointer to the value
-  stored remembered in an auxiliary list in an earlier phase? This information
-  needs to be evaluated by a plugin (more precisely by a plugin performing a
-  pointer analysis) because we ask not only about the value itself, but also
-  about pointers to the value.
+  remembered in an auxiliary list in an earlier phase? This information needs
+  to be evaluated by a plugin (more precisely by a~plugin performing a pointer
+  analysis) because we ask not only about the value itself, but also about
+  pointers to the value. We use this query in the configuration for checking
+  memory safety~(Chapter~\ref{chap:memsafety}) to
+  determine whether a check of a specific pointer was inserted in an earlier
+  phase of the instrumentation.
 \end{description}
-The default answer for all these queries is \emph{``unknown''} and it is
-supposed to be given by the plugins that are not able to evaluate the query. In
-Chapter~\ref{chap:memsafety} we implement a plugin performing a pointer
-analysis that answers to these queries with answers \emph{``true''},
-\emph{``false''} and \emph{``maybe''}.
+The default answer for all these queries is \emph{``unknown''}. In
+Chapter~\ref{chap:memsafety} we describe the use of a plugin performing a
+pointer analysis that answers to these queries with answers \emph{``true''},
+\emph{``false''}, and \emph{``maybe''}.
 
-The list of queries can be easily appended by adding more callbacks that return
-string values to the interface and by adding a handler for the added query in the
-class \texttt{Analyzer}.
+The list of queries can be easily prolonged by adding more functions that return
+string values to the interface and by adding a handler for the added query.
 
 
 \section{Configuration}\label{sec:config}
@@ -563,8 +565,8 @@ In Figure~\ref{fig:all_config} we give an example of the whole JSON
 configuration file. In this case, a program will be instrumented with calls to
 functions defined in the \texttt{zero\_division.c} file and the instrumentation
 will use one plugin. A check \texttt{checkDivisionByZero} will be inserted
-before every \texttt{sdiv} instruction, if the plugin decides that the divisor
-might be equal to zero.
+before every \texttt{sdiv} instruction (a signed integer division), if the
+plugin decides that the divisor might be equal to zero.
 
 \section{Unreachable Functions}
 

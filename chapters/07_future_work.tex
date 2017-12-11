@@ -1,20 +1,19 @@
 In the future, we would like to implement a few more features to our
 instrumentation tool. First of all, we would like to enable not only insertion
-of instructions, but also their replacement. This might seem a little bit
-inconvenient at first sight, since the instrumentation is not supposed to
-modify the given input program, however, a user might for example want to
-replace calls of a function with calls of a function with the same semantics
-but different implementation enriched with some analysis functionality, e.g.~logging.
+of instructions, but also their replacement. For example, a user may want to
+replace calls of a built-in function (e.g.~malloc) with calls of a function
+with the same semantics but different implementation enriched with some
+analysis functionality.
 
 Another improvement we would like to implement is the possibility to determine
 what plugin should be questioned when evaluating a query. The queries are often
-intended for concrete plugin and it is therefore pointless to question all
+intended for a concrete plugin and it is therefore pointless to question all
 plugins at once.
 
-Apart from the tool itself, we would also like to come up with new
+Apart from the tool itself, we would also like to come up with a new
 configuration files for \symbiotic. Currently, we use \clang to check for
 integer overflows in programs, but in the future, we want to create our own
 configuration for the instrumentation to check for the overflows. This would
 also lead to an implementation of a value analysis that would be used as a plugin.
-As for memory safety configuration, we want to try replacing the lists for
+As for memory safety configuration, we consider replacing the lists for
 preserving records with more efficient structure, such as trees.
