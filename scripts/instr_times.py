@@ -34,7 +34,9 @@ trace1 = go.Scatter(
     name="'basic'",
     hoverinfo='name',
     line=dict(
-        shape='linear'
+        shape='linear',
+        dash = 'dash',
+        width=3
     )
 )
 trace2 = go.Scatter(
@@ -45,7 +47,9 @@ trace2 = go.Scatter(
     text=["tweak line smoothness<br>with 'smoothing' in line object"],
     hoverinfo='text+name',
     line=dict(
-        shape='linear'
+        shape='linear',
+        dash = 'dot',
+        width=3
     )
 )
 trace3 = go.Scatter(
@@ -55,7 +59,8 @@ trace3 = go.Scatter(
     name="'staged'",
     hoverinfo='name',
     line=dict(
-        shape='linear'
+        shape='linear',
+        width=3
     )
 )
 data = [trace1, trace2, trace3]
@@ -69,7 +74,9 @@ layout = dict(
         tickfont=dict(
             color='black',
             size=14
-        )
+        ),
+        zeroline=True,
+        showline=True
    ),
    yaxis=dict(
         title='The time of instrumentation in ms.',
@@ -80,7 +87,10 @@ layout = dict(
         tickfont=dict(
             color='black',
             size=16
-        )
+        ),
+        zeroline=True,
+        zerolinecolor='black',
+        showline=True
    ),
    legend=dict(
         traceorder='reversed',
