@@ -8,14 +8,23 @@
 
 \section{Archive Structure}
 
-TODO
+The submitted archive for this thesis contains the repository with the
+instrumentation tool that was implemented as part of the thesis.
+
+The directory \emph{llvm-instrumentation} contains sources of the tool in C++
+and a python script \emph{instr} for running the instrumentation. There is also
+a directory \emph{instrumentation} with configurations for checking memory
+safety as described in Chapter~\ref{chap:memsafety} and a directory
+\emph{analyses} that contains a plugin performing extended pointer analysis.
+
+The repository can also be found online at \url{https://github.com/staticafi/llvm-instrumentation}.
 
 \section{Compilation and Running of Instrumentation}
 
 To compile and run the instrumentation tool, it is necessary to have
 \textsc{CMake} and the LLVM~3.9.1 together with \clang~3.9.1 installed. After
-that, bootstrap the libraries for JSON by running the following command in
-\texttt{llvm-instrumentation} directory:
+that, go to the \emph{llvm-instrumentation} directory and bootstrap the
+libraries for JSON by running the following command:
 
 \begin{lstlisting}[language=bash]
 ./bootstrap-json
@@ -44,6 +53,7 @@ as arguments:
 ./instr options config.json program.bc
 \end{lstlisting}
 
+\newpage
 \noindent The options can be following:
 \begin{itemize}
   \item \texttt{-{}-help} shows the information about running the script
@@ -61,6 +71,6 @@ The instrumentation is build automatically together with LLVM and other
 components of \symbiotic. To enable memory safety instrumentation, run
 \symbiotic with the option \texttt{-{}-prp=memsafety}. To see the code after
 the instrumentation, run \symbiotic with the option \texttt{-{}-save-files}.
-The instrumented code can be found in the file with suffix \texttt{-instr.bc}
-in the directory \texttt{symbiotic-files}.
+The instrumented code can be found in the file \texttt{*-instr.bc}
+in the directory \texttt{symbiotic\_files}.
 
