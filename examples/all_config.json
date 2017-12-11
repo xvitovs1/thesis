@@ -20,10 +20,10 @@
                "where": "before",
                "in": "*",
                "conditions": [
-                               {
-                                 "query":["canBeZero","<t1>"],
-                                 "expectedResult":["true"]
-                               }
+                  {
+                      "query": ["canBeZero","<t1>"],
+                      "expectedResult": ["true"]
+                  }
                ]
            }
         ]
