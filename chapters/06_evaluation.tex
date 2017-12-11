@@ -14,7 +14,6 @@ following errors:
 There were 390 benchmarks in total, 140 of them containing some
 memory safety violation, 250 of them safe.
 
-
 \symbiotic first instruments the program according to one of the configurations
 described in Chapter~\ref{chap:memsafety}. Since the newly inserted code marks
 possible error locations, we reduced the problem to a reachability problem.
@@ -41,11 +40,10 @@ analysis as a plugin (denoted as \emph{ePTA}) and the staged instrumentation
 (denoted as \emph{staged}). We ran \symbiotic with these configurations on the
 above mentioned benchmarks with the CPU time limit set to 120~s.
 \begin{table}[t]
-\begin{tabular}{|p{6cm} || C{1.5cm} | C{1.5cm} | C{1.5cm}|}
- \hline
- & basic & ePTA & staged \\
- \hline
- \hline
+\begin{tabular}{V{2} p{6cm} | C{1.5cm}|  C{1.5cm} | C{1.5cm} V{2}}
+ \Xhline{2\arrayrulewidth}
+ & \textbf{basic} & \textbf{ePTA} & \textbf{staged} \\
+ \Xhline{2\arrayrulewidth}
  size before instrumentation & 155801 & 155801 & 155801 \\
  \hline
  size after instrumentation  & 322058 & 192496 & 171348 \\
@@ -53,7 +51,7 @@ above mentioned benchmarks with the CPU time limit set to 120~s.
  inserted calls (total)    & 166257 & 36695 & 15547 \\
  \hline
  inserted calls (average)  & 426 & 94 & 39 \\
- \hline
+ \Xhline{2\arrayrulewidth}
 \end{tabular}
 \caption{The comparison of the three configurations for the memory safety
 instrumentation. Size is given by the number of instructions of a program.}
@@ -69,38 +67,17 @@ average number of inserted \texttt{call} instructions is counted. Note that the
 total size before instrumentation is 155801 instructions, which is 400
 instruction on average. This means that with the basic approach, the final code
 after instrumentation is of more than double size. Evidently, the number of
-inserted instructions significantly decreases with each enhancement.  This is
-also depicted in Figure~\ref{fig:increase_chart} that shows the increase of the
-total number of instructions expressed in percentage.
+inserted instructions significantly decreases with each enhancement. This is
+also depicted in Figure~\ref{fig:box} that shows the box plot for each
+configuration.
 
 \begin{figure}[h]
-  \includegraphics[width=\textwidth]{charts/bar_chart.png}
-  \caption{The total increase of the number of instructions in \% when using
-  the three configurations for the memory safety instrumentation.}
-  \label{fig:increase_chart}
+  \includegraphics[width=\textwidth]{charts/box.png}
+  \caption{The box plots for each of the three configurations for the memory safety instrumentation.}
+  \label{fig:box}
 \end{figure}
 
-\begin{table}[t]
-\begin{tabular}{|l || r | r | r|}
- \hline
- & basic & ePTA & staged \\
- \hline
- \hline
- true     & 116 & 123  & 183 \\
- \hline
- false    & 132 & 133  & 135 \\
- \hline
- timeout  & 139 & 130  & 71 \\
- \hline
-\end{tabular}
-\caption{The numbers of \emph{true}, \emph{false} and \emph{timeout} answers
-given by \symbiotic when using the three configurations for the memory safety
-instrumentation.}
-\label{tab:answers}
-
-\end{table}
-
-The reduced number of inserted instruction had indeed a positive effect on the
+The reduced number of inserted instructions had indeed a positive effect on the
 answers of \symbiotic as shown in Table~\ref{tab:answers}. When using the basic
 approach, \symbiotic did not manage to decide 139 benchmarks in the given time
 limit. With a pointer analysis, the number of timeouts slightly decreased. The
@@ -110,6 +87,25 @@ especially on the benchmarks that did not contain any violation of memory
 safety. Observe that \symbiotic was able to reveal the memory violations in
 almost all benchmarks that were labeled as unsafe in the given time limit with
 all the configurations of instrumentation.
+
+\begin{table}[t]
+\begin{tabular}{V{2} c |  c |  c |  c V{2}}
+ \Xhline{2\arrayrulewidth}
+ & \textbf{basic} & \textbf{ePTA} & \textbf{staged} \\
+ \Xhline{2\arrayrulewidth}
+ true     & 116 & 123  & 183 \\
+ \hline
+ false    & 132 & 133  & 135 \\
+ \hline
+ timeout  & 139 & 130  & 71 \\
+ \Xhline{2\arrayrulewidth}
+\end{tabular}
+\caption{The numbers of \emph{true}, \emph{false} and \emph{timeout} answers
+given by \symbiotic when using the three configurations for the memory safety
+instrumentation.}
+\label{tab:answers}
+
+\end{table}
 
 We also measured the CPU running times of the instrumentation process. The
 instrumentation using the basic approach took approximately 40~ms on average.
@@ -126,20 +122,31 @@ insignificantly as showed in Figure~\ref{fig:times_chart}.
 
 \section{SV-COMP 2018}
 
-\symbiotic proved its abilities in SV-COMP~2018, where it took the first place
+\symbiotic proved its abilities in SV-COMP~2018, where it won the first place
 in the official \emph{MemSafety} categories. There were 326 benchmarks in
 total\footnote{\url{https://sv-comp.sosy-lab.org/2018/benchmarks.php}}.
 
+In Table~\ref{tab:results} we present the results of \symbiotic,
+\textsc{PredatorHP}~\cite{predatorhp} which was placed second, and \textsc{UKojak}~\cite{ukojak} which was
+third. The results were published at the official website of
+SV-COMP~2018\footnote{\url{https://sv-comp.sosy-lab.org/2018/results/results-verified/}}.
+None of the tools reported any incorrect answer.
+
+
+Table~\ref{tab:score} shows that not only \symbiotic scored the most points,
+but it was also the fastest. \symbiotic managed to solve the benchmarks almost
+seven times faster than \textsc{PredatorHP} and thirty-five times faster that
+\textsc{UKojak}. This achievement is also visible in the quantile plot in
+Figure~\ref{fig:quantile}. The difference
+
 \begin{table}[!t]
 \begin{center}\setlength{\tabcolsep}{5pt}
-\begin{tabular}{cccccccc}
+\begin{tabular}{V{2} c| c|c|c|c|c|c|c V{2}}
 \toprule[1pt]
-&& \multicolumn{2}{c}{\bf \symbiotic}
-& \multicolumn{2}{c}{\bf \textsc{PredatorHP}}
-& \multicolumn{2}{c}{\bf \textsc{UKojak}}\\
-\cmidrule[.8pt](lr{.5em}){3-4}
-\cmidrule[.8pt](lr{.5em}){5-6}
-\cmidrule[.8pt](lr{.5em}){7-8}
+ & & \multicolumn{2}{c}{\bf \symbiotic}
+& \multicolumn{2}{|c|}{\bf \textsc{PredatorHP}}
+& \multicolumn{2}{c V{2}}{\bf \textsc{UKojak}}\\
+\midrule[1pt]
 \mr{category} &\scriptsize number of
 & \mr{solved} &\scriptsize safe
 & \mr{solved} &\scriptsize safe
@@ -167,18 +174,38 @@ total\footnote{\url{https://sv-comp.sosy-lab.org/2018/benchmarks.php}}.
           &      &                  &\scriptsize 3 &          &\scriptsize 2 &         &\scriptsize 0 \\
 \midrule[1pt]
 
+\midrule[1pt]
 \mr{total} & \mr{326} & \mb{260} &\scriptsize 125 & \mr{216} &\scriptsize 101 & \mr{122} &\scriptsize 76  \\
 \cline{4-4}\cline{6-6}\cline{8-8}
            &          &          &\scriptsize 135 &          &\scriptsize 115 &         &\scriptsize 46\\
 \bottomrule[1pt]
 \end{tabular}
 \vspace*{1em}
-\caption{Numbers of solved benchmarks by each of the compared tools.}
+\caption{Numbers of solved benchmarks by each of the three winner of SV-COMP~2018.}
 \label{tab:results}
 \end{center}
 \end{table}
 
-In Table~\ref{tab:results} we show the results of \symbiotic,
-\textsc{PredatorHP} which was placed second, and with \textsc{UKojak} which was
-third. The results were published at the official website of
-SV-COMP~2018\footnote{\url{https://sv-comp.sosy-lab.org/2018/results/results-verified/}}.
+
+\begin{table}[t]
+\centering
+\begin{tabular}{V{2} c|c|c|c V{2}}
+\Xhline{2\arrayrulewidth}
+          & \symbiotic & \textsc{PredatorHP} & \textsc{UKojak} \\
+\hline
+score     & 411        & 286                   & 265               \\
+\hline
+CPU times & 310 s      & 2100 s                & 11 000 s\\
+\Xhline{2\arrayrulewidth}
+\end{tabular}
+\caption{Score and CPU times (without timeouts) of the three winners of SV-COMP~2018.}
+\label{tab:score}
+
+\end{table}
+
+\begin{figure}[h]
+  \includegraphics[width=\textwidth]{charts/quantilePlot-MemSafety.png}
+  \caption{The quantile plot for the category \emph{MemSafety} taken from
+  \url{https://sv-comp.sosy-lab.org/2018/results/results-verified/quantilePlot-MemSafety.svg}}
+  \label{fig:quantile}
+\end{figure}

@@ -40,7 +40,9 @@
 %% fonts:
 \usepackage{paratype}
 \usepackage{booktabs}
-\usepackage{multicol, makecell, multirow}
+\aboverulesep=0ex
+\belowrulesep=0ex
+\usepackage{multicol, makecell, multirow, boldline}
 \def\textrussian#1{{\usefont{T2A}{PTSerif-TLF}{m}{rm}#1}}
 \newcommand{\symbiotic}{\textsc{Symbiotic}\xspace}
 \newcommand{\mr}[1]{\multirow{2}{*}{#1}}
@@ -61,7 +63,7 @@
     keywords      = {instrumentation, static analysis, program analysis, LLVM, memory safety},
     TeXkeywords   = {instrumentation, static analysis, program analysis, LLVM, memory safety},
     thanks        = {Most of all, I would like to thank my advisor Jan Strejček and my consultant Marek Chalupa for their guidance, patience and the time they spent discussing the thesis with me. I would also like to thank my family and friends for their support when I was working on this thesis.},
-    abstract      = {The thesis is focused on instrumentation of LLVM IR. First, we give an insight into existing tools that instrument a code to perform an analysis on it. Then we implement and describe a new tool for instrumentation of LLVM IR that is configurable by a~user and can use information from various static analyses. We create a configuration for checking memory safety and reduce the number of inserted checks by employing a pointer analysis and dividing it into phases. At the end, we evaluate the instrumentation for checking memory safety integrated in a verification tool called \symbiotic on a set of benchmarks. },
+    abstract      = {The thesis is focused on instrumentation of LLVM IR. We give an insight into existing tools that instrument a code to perform an analysis on it. Further, we implement and describe a new tool for instrumentation of LLVM IR that is configurable by a~user. Moreover, the instrumentation can utilize various static analyses. We create a configuration for checking memory safety and reduce the number of inserted checks by employing a pointer analysis. At the end, we integrate the instrumentation for checking memory safety in a verification tool called \symbiotic~\cite{Symbiotic} and evaluate it on a set of benchmarks. },
 }
 
 \usepackage{caption}
