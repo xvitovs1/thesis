@@ -104,12 +104,12 @@ to store and the address of a target memory.
 It can be used for example to get the address of an element of an array.
 \end{description}
 We can see the usage of these instructions in Figure~\ref{fig:llvm_example} in
-the function \texttt{foo}. The \texttt{alloca} instruction on the line~4 allocates an
+the function \texttt{foo}. The \texttt{alloca} instruction on line~4 allocates an
 array \texttt{arr} of ten 32-bit integers on the stack. The \texttt{load}
-instruction on the line~5 reads the value of the global variable \texttt{number} and
+instruction on line~5 reads the value of the global variable \texttt{number} and
 names it as \texttt{\%1}. The value is later stored to \texttt{\%2} on line~8.
 \texttt{\%2} is the address of the fifth element of the array~\texttt{arr} since the
-\texttt{getelementptr} instruction was used on the line~6 on the array \texttt{arr}
+\texttt{getelementptr} instruction was used on line~6 on the array \texttt{arr}
 with the last operand equal to 5.
 
 Other relevant instructions are \texttt{call} and \texttt{bitcast}:
