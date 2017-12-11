@@ -1,0 +1,32 @@
+{
+  "file": "zero_division.c",
+  "analyses": ["plugin.so"],
+  "phases": [
+     {
+        "instructionRules": [
+           {
+             "findInstructions": [
+                {
+                  "returnValue": "*",
+                  "instruction": "sdiv",
+                   "operands": ["*","<t1>"]
+                }
+              ],
+              "newInstruction": {
+                   "returnValue": "*",
+                    "instruction": "call",
+                    "operands": ["<t1>","checkDivisionByZero"]
+               },
+               "where": "before",
+               "in": "*",
+               "conditions": [
+                               {
+                                 "query":["canBeZero","<t1>"],
+                                 "expectedResult":["true"]
+                               }
+               ]
+           }
+        ]
+     }
+  ]
+}

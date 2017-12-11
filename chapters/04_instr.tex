@@ -511,7 +511,7 @@ for global variables are applied. That is, for each rule for global variables,
 
 \begin{figure}[t]
 \lstinputlisting{examples/json_example.json}
-\caption{Example of an \texttt{instructionRule} in a JSON configuration file.}
+\caption{Example of the \texttt{instructionRule} in a JSON configuration file.}
 \label{fig:json_example}
 \end{figure}
 
@@ -531,7 +531,7 @@ to \emph{true}.
 
 \begin{figure}[t]
 \lstinputlisting{examples/json_example2.json}
-\caption{Example of a \texttt{globalVariablesRule} in a JSON configuration file.}
+\caption{Example of the \texttt{globalVariablesRule} in a JSON configuration file.}
 \label{fig:json_example2}
 \end{figure}
 
@@ -543,6 +543,28 @@ a variable \texttt{<t2>}. Plugins are asked whether the given condition
 positive, a new call of the function \texttt{\_\_INSTR\_remember\_global} with
 arguments \texttt{<t1>} and \texttt{<t2>} is inserted at the beginning of
 \emph{main}.
+
+\lstset{
+    basicstyle=\footnotesize,
+    string=[s]{"}{"},
+    stringstyle=\color{blue},
+    comment=[l]{:},
+    commentstyle=\color{black},
+    escapeinside={<@}{@>}
+}
+
+\begin{figure}[t]
+\lstinputlisting{examples/all_config.json}
+\caption{Example of the JSON configuration file.}
+\label{fig:all_config}
+\end{figure}
+
+In Figure~\ref{fig:all_config} we give an example of the whole JSON
+configuration file. In this case, a program will be instrumented with calls to
+functions defined in the \texttt{zero\_division.c} file and the instrumentation
+will use one plugin. A check \texttt{checkDivisionByZero} will be inserted
+before every \texttt{sdiv} instruction, if the plugin decides that the divisor
+might be equal to zero.
 
 \section{Unreachable Functions}
 
