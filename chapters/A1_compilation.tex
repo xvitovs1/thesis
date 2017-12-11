@@ -35,8 +35,10 @@ cmake .
 make install
 \end{lstlisting}
 
-\noindent After the successful installation, the tool can be easily used by running the script
-\texttt{instr}, that takes a JSON configuration file and the program in C (or optionally in LLVM bytecode if option \texttt{-{}-bc} is used) as arguments:
+\noindent After the successful installation, the tool can be easily used by
+running the script \texttt{instr}, that takes a JSON configuration file and the
+program in C (or optionally in LLVM bitcode if option \texttt{-{}-bc} is used)
+as arguments:
 
 \begin{lstlisting}[language=bash]
 ./instr options config.json program.bc
@@ -46,7 +48,8 @@ make install
 \begin{itemize}
   \item \texttt{-{}-help} shows the information about running the script
   \item \texttt{-{}-bc} means that the given code is in LLVM
-  \item \texttt{-{}-ll} generates also a file in LLVM that is human-readable
+  \item \texttt{-{}-ll} generates the output file also in LLVM that is human-readable
+  \item \texttt{-{}-output=FILE} allows to specify the name of the output file
 \end{itemize}
 
 \subsection{Compiling and running instrumentation within \symbiotic}

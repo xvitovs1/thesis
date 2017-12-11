@@ -368,7 +368,7 @@ In the first phase, \texttt{\_\_INSTR\_check\_*} calls are inserted
 according to results of the pointer analysis as described in
 Section~\ref{sec:pta}. Additionally, the instrumentation remembers all memory
 locations that may have been dereferenced by any instrumented instruction in an
-auxiliary list by setting the field \texttt{remember} in the config file.
+auxiliary list by setting the field \texttt{remember} in the configuration file.
 
 In the second phase, we insert \texttt{\_\_INSTR\_remember*} calls. For every
 memory allocation, we first check whether the underlying memory location has
