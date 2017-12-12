@@ -1,6 +1,6 @@
 {
   "file": "zero_division.c",
-  "analyses": ["plugin.so"],
+  "analyses": ["valueAnalysis.so"],
   "phases": [
      {
         "instructionRules": [

@@ -160,7 +160,7 @@ Currently, the following queries with their corresponding meanings are available
   \item[isValidPointer(addr, len)] Is a dereference of \texttt{len} bytes
   starting from the address \texttt{addr} a valid operation?
     \item[hasKnownSize(object)] Can we statically determine the size of the memory
-         object that is being dereferenced?
+         object?
   \item[pointsTo(p,a)] Does the given pointer \texttt{p} point to the value \texttt{a}?
   \item[isNull(p)] Does the given pointer \texttt{p} point to NULL?
   \item[isRemembered(value)] Was the given value or a pointer to the value
@@ -434,9 +434,9 @@ plugins specified, the plugins are loaded and the instrumentation part begins.
 \end{algorithm}
 \end{figure}
 
-The instrumentation is implemented to be staged, therefore the first step is to
+The instrumentation is staged, therefore the first step is to
 process all the phases one after each other in the following way: iterate over
-functions from the loaded module and check rules from the phase being processed
+functions from the module and check rules from the phase being processed
 that are relevant for the current function. That is, take into consideration
 only rules where \texttt{in} field is set to "*" or to the name of the
 function.  As for the other rules, compare the
@@ -450,7 +450,7 @@ sequence in \texttt{findInstructions} does not match the current instruction
 from the program, skip this rule. It they match, try to match the second
 instruction from the sequence with the following instruction from the program.
 If they do not match, skip this rule. If they match, try to match the third
-instruction from the sequence with the following instruction from the program,
+instruction,
 and so on. There is currently no need for a more efficient algorithm, since the
 sequences we are looking for are usually very short, mostly of length one.
 
@@ -584,17 +584,17 @@ functionality is available only if there is a pointer analyses plugin.
 \section{Logging}
 
 To sum up the instrumentation process for a concrete file, each operation is
-logged with a logger. The logger notes following operations:
+logged with a logger. The logger notes the following operations:
 \begin{itemize}
-  \item parsing configuration
-  \item loading plugins (also lists the names of the loaded plugins)
-  \item the beginning and the end of each phase
-  \item leaving out a function from instrumentation
-  \item rule application and instruction insertion
-  \item the end of instrumentation (also logs the name of the resulting file)
+  \item parsing configuration,
+  \item loading plugins (also lists the names of the loaded plugins),
+  \item the beginning and the end of each phase,
+  \item leaving out an unreachable function from instrumentation,
+  \item a rule application and instruction insertion,
+  \item the end of instrumentation (also logs the name of the output file).
 \end{itemize}
 The logger also logs errors such as an error when parsing configuration,
 invalid path to a plugin, a non-existing function instrumentation, etc. Logs
-can be found in \emph{log.txt} file that is generated at the end of the
+can be found in the \emph{log.txt} file that is generated at the end of the
 instrumentation process.
 
