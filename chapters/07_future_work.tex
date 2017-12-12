@@ -14,6 +14,7 @@ Apart from the tool itself, we would also like to come up with a new
 configuration files for \symbiotic. Currently, we use \clang to check for
 integer overflows in programs, but in the future, we want to create our own
 configuration for the instrumentation to check for the overflows. This would
-also lead to an implementation of a value analysis that would be used as a plugin.
-As for memory safety configuration, we consider replacing the lists for
-preserving records with more efficient structure, such as trees.
+also lead to an implementation of a value analysis that would be used as a
+plugin to reduce the number of inserted checks.  As for memory safety
+configuration, we consider replacing the lists for preserving records with more
+efficient structure, such as trees.
