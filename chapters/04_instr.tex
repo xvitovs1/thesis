@@ -157,10 +157,9 @@ location?'' is \emph{``unknown''}.
 
 Currently, the following queries with their corresponding meanings are available:
 \begin{description}
-  \item[isValidPointer(p, offset)] Is a dereference of a pointer \texttt{p}
-  valid operation? More precisely, can the memory block to which the pointer
-  \texttt{p} points to be accessed at the given \texttt{offset} from the pointer?
-  \item[hasKnownSize(object)] Can we statically determine the size of the memory
+  \item[isValidPointer(addr, len)] Is a dereference of \texttt{len} bytes
+  starting from the address \texttt{addr} a valid operation?
+    \item[hasKnownSize(object)] Can we statically determine the size of the memory
          object that is being dereferenced?
   \item[pointsTo(p,a)] Does the given pointer \texttt{p} point to the value \texttt{a}?
   \item[isNull(p)] Does the given pointer \texttt{p} point to NULL?
