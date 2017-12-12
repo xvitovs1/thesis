@@ -566,7 +566,7 @@ configuration file. In this case, a program will be instrumented with calls to
 functions defined in the \texttt{zero\_division.c} file and the instrumentation
 will use one plugin. A check \texttt{checkDivisionByZero} will be inserted
 before every \texttt{sdiv} instruction (a signed integer division), if the
-plugin decides that the divisor might be equal to zero.
+plugin answers to the query \texttt{canBeZero} with \emph{``true''}.
 
 \section{Unreachable Functions}
 

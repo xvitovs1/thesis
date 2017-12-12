@@ -107,7 +107,7 @@ check for memory leaks.
 \lstset{escapeinside={<@}{@>}, columns=fullflexible, basicstyle=\ttfamily, language=llvm, style=nasm}
 \begin{figure}[t]
 \begin{lstlisting}
-%1 = alloca i32*, align 8
+%1 = alloca i32*
 <@{\color[RGB]{0, 135, 0} \%2 = bitcast i32** \%1 to i8*}@>
 <@{\color[RGB]{0, 135,0} call void @\_\_INSTR\_remember(i8* \%2, i64 8, i32 1)}@>
 %3 = call i8* malloc(i64 4)
@@ -115,7 +115,7 @@ check for memory leaks.
 %4 = bitcast i8* %3 to i32*
 <@{\color[RGB]{0, 135,0} \%5 = bitcast i32** \%1 to i8*}@>
 <@{\color[RGB]{0, 135,0} call void @\_\_INSTR\_check\_pointer(i8* \%5, i64 8)}@>
-store i32 %4, i32** %1, align 8
+store i32 %4, i32** %1
 %6 = bitcast i32** %1 to i8*
 <@{\color[RGB]{0, 135,0} call void @\_\_INSTR\_free(i8* \%6)}@>
 call void @free(i8* %6)
@@ -124,7 +124,7 @@ call void @free(i8* %6)
 %8 = load i32*, i32** %1
 <@{\color[RGB]{0, 135,0} \%9 = bitcast i32** \%8 to i8*}@>
 <@{\color[RGB]{0, 135,0} call void @\_\_INSTR\_check\_pointer(i8* \%9, i64 8)}@>
-store i32 2, i32** %8, align 4
+store i32 2, i32** %8
 \end{lstlisting}
 \caption{Basic instrumentation of a code with an invalid pointer
   dereference.}
@@ -142,7 +142,7 @@ which case we need to have the record, otherwise we would report
 invalid dereference.
 %(in particular, dereference of non-allocated memory).
 The memory allocated by the call to \texttt{malloc} is remembered by the call
-to \texttt{\_\_INSTR\_remember\_malloc(i8* \%3, i64 4, i32 1)}. This memory is
+to \texttt{\_\_INSTR\_remember\_malloc(i8* \%3, i64 4)}. This memory is
 later freed and this fact is recorded by the \texttt{\_\_INSTR\_free(i8* \%6)}
 call. Every access to the memory (every \texttt{load} or \texttt{store}
 instruction) are checked using \texttt{\_\_INSTR\_check\_pointer}. The last
@@ -396,12 +396,12 @@ that do not use dynamic memory allocation.
 \lstset{escapeinside={<@}{@>}, columns=fullflexible, basicstyle=\ttfamily, language=llvm, style=nasm}
 \begin{figure}[t]
 \begin{lstlisting}
-%1 = alloca [10 x i32], align 16
+%1 = alloca [10 x i32]
 %2 = getelementptr inbounds [10 x i32],
        [10 x i32]* %1, i64 0, i64 20
 <@{\color[RGB]{0, 135,0} \%3 = bitcast [10 x i32]* \%1 to i8*}@>
 <@{\color[RGB]{0, 135,0} call void @\_\_INSTR\_check\_bounds(i8* \%3, i64 40, i2* \%1, i64 4)}@>
-store i32 1, i32* %2, align 16
+store i32 1, i32* %2
 \end{lstlisting}
 \caption{Instrumentation of a code with \texttt{\_\_INSTR\_check\_bounds}.}
 \label{fig:check_bounds_example}
