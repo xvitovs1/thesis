@@ -1,3 +1,8 @@
+In this chapter, we describe the configuration of instrumentation for checking
+memory safety. The configuration was created in order to enable checking memory
+safety with \symbiotic. Nevertheless, the final code can be executed and used for other
+purposes.
+
 \section{Basic Approach}\label{sec:basic}
 
 To check memory safety, namely absence of invalid pointer dereferences, invalid
@@ -19,11 +24,11 @@ be removed in order to reduce memory consumption.
 
 To maintain the records, we use the following functions:
 \begin{itemize}
-  \item \texttt{\_\_INSTR\_remember(address, type size, number of fields)}
+  \item \texttt{\_\_INSTR\_remember(address, type\_size, num\_of\_fields)}
   \\Creates a record and inserts it to the \stacklist.
   \item \texttt{\_\_INSTR\_remember\_malloc(address, size)}
   \\Creates a record and inserts it to the \heaplist. If the address is equal
-  to 0 (i.e.  address for NULL), no record is stored.
+  to 0 (i.e. the NULL address), no record is stored.
   \item \texttt{\_\_INSTR\_remember\_global(address, size)}
   \\Creates a record and inserts it to the \globalslist.
   \item \texttt{\_\_INSTR\_free(address)}
@@ -32,19 +37,19 @@ To maintain the records, we use the following functions:
   record exists, it is removed from the \heaplist and inserted into the
   \dealloclist. If there is a~record for this address, but it is found in the
   \dealloclist, we report double free error. If the address is equal to 0 (i.e.
-  address for NULL), nothing happens. In all remaining cases, an invalid
+  the NULL address), nothing happens. In all remaining cases, an invalid
   deallocation is reported.
-  \item \texttt{\_\_INSTR\_realloc(old\_address, new\_address\_size)} \\Removes
+  \item \texttt{\_\_INSTR\_realloc(old\_address, new\_address, size)} \\Removes
   the old record for the \texttt{old\_address} from the \heaplist and inserts a
   new record to the \heaplist. If the \texttt{old\_address} is equal to 0
-  (i.e. address for NULL), only the new record is created. If the
+  (i.e. the NULL address), only the new record is created. If the
   \texttt{new\_address} is equal to 0, nothing happens.
   \item \texttt{\_\_INSTR\_destroy\_allocas()}
   \\ Since local variables on the stack are destroyed when a function
   finishes, this function removes all relevant records from the \stacklist right
-  before returning from a function.
+  before returning from the function.
   \item \texttt{\_\_INSTR\_set\_flag()}
-  \\ At the beginning of a function, it sets flag in the \stacklist to mark the
+  \\ When entering a function, it sets a flag in the \stacklist to mark the
   point to which extent the records in this list should be removed when
   \texttt{\_\_INSTR\_destroy\_allocas()} is called.
 \end{itemize}
@@ -64,7 +69,7 @@ the safety of memory operations, but they do not modify them:
 \item \texttt{\_\_INSTR\_check\_realloc(address)}
   \\ Checks whether
   \emph{realloc} is called on a valid pointer. More precisely, if the record for
-  the given address is found in other list than the \heaplist, we report an
+  the given address is not found in the \heaplist, we report an
   error.
 % \todo{NENI PRAVDA: When dereferencing a single address, we use 1 as the
 % second parameter. A larger parameter is used for instrumentation of
@@ -101,7 +106,7 @@ before the program reaches the actual error. \texttt{\_\_INSTR\_set\_flag}
 calls  are instrumented at the beginnings of all functions and calls of
 \texttt{\_\_INSTR\_destroy\_allocas} are instrumented \emph{above} all return
 instructions in each function. Finally, a call to
-\texttt{\_\_INSTR\_check\_leaks()} is inserted at the end of \emph{main} to
+\texttt{\_\_INSTR\_check\_leaks} is inserted at the end of \emph{main} to
 check for memory leaks.
 
 \lstset{escapeinside={<@}{@>}, columns=fullflexible, basicstyle=\ttfamily, language=llvm, style=nasm}
@@ -132,22 +137,19 @@ store i32 2, i32** %8
 \end{figure}
 
 Figure~\ref{fig:example1} shows a simple code containing an invalid
-pointer dereference. The code is instrumented with the
-\texttt{\_\_INSTR\_*} function calls which keep track of memory
-operations and check their safety. To begin with, the instrumentation
-remembers every memory allocation, including stack variables. It may
+pointer dereference. The instrumentation
+remembers every memory allocation, including stack variables (lines~3 and~5). It may
 seem redundant at first, but without any further analysis, we can not
 say that a local variable is dereferenced e.g.~using a pointer, in
 which case we need to have the record, otherwise we would report
 invalid dereference.
 %(in particular, dereference of non-allocated memory).
-The memory allocated by the call to \texttt{malloc} is remembered by the call
-to \texttt{\_\_INSTR\_remember\_malloc(i8* \%3, i64 4)}. This memory is
+The memory allocated by the call to \texttt{malloc} is
 later freed and this fact is recorded by the \texttt{\_\_INSTR\_free(i8* \%6)}
 call. Every access to the memory (every \texttt{load} or \texttt{store}
 instruction) are checked using \texttt{\_\_INSTR\_check\_pointer}. The last
-call of this function (i.e.~line~17) reveals use-after free error. We can also
-see that apart from the  calls bitcasts were inserted to convert actual types
+call of this function (line~17) reveals use-after-free error. We can also
+see that apart from the  calls to bitcasts were inserted to convert actual types
 to the types required by \texttt{\_\_INSTR\_*} functions.
 
 %\texttt{\_\_INSTR\_free(p)} moves the record from \heaplist to \dealloclist.
@@ -165,16 +167,15 @@ In Figure~\ref{fig:examplesetflags}, we demonstrate a code where
 \texttt{\_\_INSTR\_set\_flag} and \texttt{\_\_INSTR\_destroy\_allocas}
 functions are necessary. The function \texttt{getArray} allocates an array of
 ten integers and returns a pointer to this array. The array was allocated on
-stack which means its scope ends at the end of the function. If this function
-is called, any dereference of the returned pointer would be invalid. However,
+the stack which means its lifetime ends at the end of the function. However,
 the record was stored to the \stacklist on line 5. If the functions
 \texttt{\_\_INSTR\_set\_flag} and \texttt{\_\_INSTR\_destroy\_allocas} were not
 called, a check of any dereference of the returned pointer would find the
 record for corresponding memory block in the \stacklist and the error would not
 be discovered. If these two functions are called, all records in the \stacklist
-up to a record with the flag set by the call on line 2 (that is, all records
-for local variables from the current function) are destroyed at the end of
-function \texttt{getArray} on line 8. In this case, the dereferenced
+up to the record with the flag set by the call on line 2 (that is, all records
+for local variables from the current function) are destroyed at the end of the
+function \texttt{getArray} on line 8. In this case, the
 returned pointer would no longer be present in the \stacklist and an
 invalid pointer dereference would be reported.
 
@@ -209,7 +210,7 @@ free(p);
 <@{\color[RGB]{0, 135,0} // r may point to p }@><@{\color{red} or is invalidated}@>
 *r = 1;
 \end{lstlisting}
-\caption{The difference between \emph{flow-insensitive} (blue), \emph{flow-sensitive} (green) pointer analysis and \emph{extended flow-sensitive} pointer analysis (green and red). For the sake of simplicity, the code is in C and not LLVM.}
+\caption{The difference between \emph{flow-insensitive} (blue), \emph{flow-sensitive} (green) pointer analysis and \emph{extended flow-sensitive} pointer analysis (green and red). For the sake of simplicity, the code is in C and not in LLVM.}
 \label{fig:example2}
 \end{figure}
 
@@ -238,13 +239,8 @@ Figure~\ref{fig:example2} a flow-insensitive analysis would tell us
 that \emph{r} may point to either NULL or \emph{p} anywhere in the
 program. The flow-sensitive analysis can give us information that
 until the \texttt{r = p;} assignment is performed, \emph{r} points to
-\texttt{NULL} and after that it points to \emph{p}. Another important
-characteristic of pointer analysis is whether it is
-\emph{field-sensitive}, that is whether it differentiates between
-elements of aggregate objects (arrays, structures, ...) or whether it
-takes an aggregate object as a single object without any sub-parts
-(\emph{field-insensitive}).
-
+\texttt{NULL} and after that it points to \emph{p}.
+ 
 With information from pointer analysis, we can say which memory may be
 dereferenced in many cases. If every possible memory dereference done
 by an instruction is safe, we do not need to insert the check for
@@ -262,12 +258,7 @@ dereferences the memory allocated by the call to \texttt{malloc(4)}
 and thus writing 4 bytes to that memory is a safe operation.
 Instrumentation would incorrectly omit the check in this case.
 
-There exist sophisticated forms of pointer analysis (e.g. shape
-analysis~\cite{Rinetzky2001,Hind01}) that can model the heap and the
-stack and track the state of memory.  However, these analyses are too
-complex for our use case. We do not want the pointer analysis model
-the heap and the stack, because this is done by the reachability
-analysis later.  Therefore we extended a simple flow-sensitive
+We extended a simple flow-sensitive
 Andersen's style~\cite{and94} pointer analysis so that it can track
 whether a memory block was possibly invalidated (i.e.~it was freed or
 its lifetime ended).  This \emph{extended pointer analysis} must be
@@ -285,22 +276,21 @@ program as possibly invalidated (freed).
 
 % The predicate that is of a great importance for checking memory
 % safety is \emph{mayBeInvalidPointer(addr, len)}.
-For checking memory safety we use the \texttt{isValidPointer(addr, len)} query
-with expected result \emph{"false"} or \emph{"maybe"}. Satisfiability of this
+For checking memory safety, we use the \texttt{isValidPointer(addr, len)} query
+with expected result \emph{``false''} or \emph{``maybe''}. Satisfiability of this
 condition is determined through the extended pointer analysis, which returns
 the expected results if dereferencing \texttt{len} bytes starting from the
 address given in \texttt{addr} argument may be unsafe or when the analysis does
 not have enough information to refute the validity of the predicate.  The
 reader could notice that we do not pass the location in the program to the
 predicate even though we claimed that the extended pointer analysis is
-flow-sensitive. This is because \llvm that we use as the intermediate
-representation is in partial-SSA form~\cite{Lattner04}, so the pointer analysis
+flow-sensitive. This is because LLVM SSA form, so the pointer analysis
 can infer the location from the \texttt{addr} variable.
 %\todo{Here we use that fact that LLVM is in partial-SSA, otherwise we must pass also location
 %in the program to that predicate...}
 
 We added the condition \texttt{isValidPointer(addr, len)} with expected results
-\emph{"false"} or \emph{"maybe"} to every rule that instruments reading or
+\emph{``false''} or \emph{``maybe''} to every rule that instruments reading or
 writing from/to memory (where \texttt{addr} is the address used to access the
 memory and \texttt{len} is the number of read/written bytes). In
 Figure~\ref{fig:examplepta}, an array of ten integers is allocated on line 1
@@ -344,7 +334,7 @@ because smaller lists are searched.
 \lstset{escapeinside={<@}{@>}, columns=fullflexible, basicstyle=\ttfamily, language=llvm, style=nasm}
 \begin{figure}[t]
 \lstinputlisting{examples/noremember.ll}
-\caption{Instrumentation of a code where no checks are inserted, \texttt{\_\_INSTR\_remember*} function calls are therefore redundant.}
+\caption{Instrumentation of a code where no checks are inserted and \texttt{\_\_INSTR\_remember*} function calls are therefore redundant.}
 \label{fig:exampleNoRemember}
 \end{figure}
 
@@ -368,12 +358,12 @@ In the first phase, \texttt{\_\_INSTR\_check\_*} calls are inserted
 according to results of the pointer analysis as described in
 Section~\ref{sec:pta}. Additionally, the instrumentation remembers all memory
 locations that may have been dereferenced by any instrumented instruction in an
-auxiliary list by setting the field \texttt{remember} in the configuration file.
+auxiliary list by setting the field \texttt{remember} in corresponding rules.
 
 In the second phase, we insert \texttt{\_\_INSTR\_remember*} calls. For every
 memory allocation, we first check whether the underlying memory location has
 been remembered in the first phase with the query
-\texttt{isRemembered(memory\_location)} to the extended pointer analysis. If it
+\texttt{isRemembered(memory\_location)}. If it
 has, we create a record for this allocation because a check that can use this
 record was inserted in the first stage. Otherwise, this memory allocation is
 not instrumented.
@@ -385,10 +375,10 @@ end of \emph{main}, we insert calls to
 first phase.  Nevertheless, the staged instrumentation can improve
 also on memory leaks checking. If some dynamic memory allocation is
 instrumented with \texttt{\_\_INSTR\_remember\_malloc} in the first
-phase, the \texttt{malloc\_present} flag is set to \emph{true}.  In
+phase, the \texttt{malloc-present} flag is set to \emph{true}.  In
 the second stage, \texttt{\_\_INSTR\_check\_leaks} is instrumented
 only under the condition that the \texttt{malloc\_present} flag was
-set to \emph{true}. Therefore we can avoid leaks checking in programs
+set to \emph{true}. Therefore, we can avoid leaks checking in programs
 that do not use dynamic memory allocation.
 
 \subsection{Extension With Constant-Time Checks}\label{sec:constant_time}
@@ -397,8 +387,9 @@ that do not use dynamic memory allocation.
 \begin{figure}[t]
 \begin{lstlisting}
 %1 = alloca [10 x i32]
+%m = call i64 @input()
 %2 = getelementptr inbounds [10 x i32],
-       [10 x i32]* %1, i64 0, i64 20
+       [10 x i32]* %1, i64 0, i64 %m
 <@{\color[RGB]{0, 135,0} \%3 = bitcast [10 x i32]* \%1 to i8*}@>
 <@{\color[RGB]{0, 135,0} call void @\_\_INSTR\_check\_bounds(i8* \%3, i64 40, i2* \%1, i64 4)}@>
 store i32 1, i32* %2
@@ -407,11 +398,9 @@ store i32 1, i32* %2
 \label{fig:check_bounds_example}
 \end{figure}
 
-The following extension is not directly bound to the stages, but it can amplify
-the positive effect of staged instrumentation and therefore we present it in
-this section. Let us assume that there is an instruction that may possibly
+ Let us assume that there is an instruction that may possibly
 perform an unsafe dereference (i.e.~the answer to \texttt{isValidPointer}
-query was \emph{"false"} or \emph{"maybe"} and thus a check has to be
+query was \emph{``false''} or \emph{``maybe''} and thus a check has to be
 inserted). In some cases, we can statically find the address and the size of
 the memory block that is being dereferenced and therefore we do not need to
 look for the corresponding record in the list during run-time. The cases where
@@ -424,7 +413,7 @@ dereferenced pointer must point
 \end{itemize}
 
 We query the pointer analysis with \texttt{hasKnownSize(memory\_block)}
-to get this information.  If the answer is \emph{"false"} or \emph{"maybe"},
+to get this information.  If the answer is \emph{``false''} or \emph{``maybe''},
 the dereference must be instrumented with the usual
 \texttt{\_\_INSTR\_check\_pointer}. Otherwise, a call to a
 \texttt{\_\_INSTR\_check\_bounds} function is to be inserted.
@@ -441,14 +430,14 @@ allocation and the inserted checks.  There are definitely cases where this
 optimized instrumentation could be used with variable size parameter too, but
 they are a subject of further research.
 
-An example of a constant-time check can be found in
+An example of instrumentation with constant-time checks can be found in
 Figure~\ref{fig:check_bounds_example}. On line 6 where the array of ten
 integers allocated on line 1 is being dereferenced by \texttt{store}
 instruction, the pointer analysis can determine the address and the size of the
 array precisely, hence the call to \texttt{\_\_INSTR\_check\_bounds} is
 inserted instead of the usual call to \texttt{\_\_INSTR\_check\_pointer}.
 
-As we already said, this extension is not dependent on the staged
+This extension is not dependent on the staged
 instrumentation. Nevertheless, since the \texttt{\_\_INSTR\_check\_bounds}
 function does not use records, no memory locations need to be remembered
 because of this check (unlike when using \texttt{\_\_INSTR\_check\_pointer}),
@@ -458,13 +447,12 @@ in Figure~\ref{fig:check_bounds_example} where no call to
 \texttt{\_\_INSTR\_remember} was inserted below the \texttt{alloca}
 instruction).
 
-\medskip
-Inserting fewer calls to \texttt{\_\_INSTR\_remember} function has
-a positive effect on the speed of reachability analysis since the lists
-used to keep records are shorter. All the described extensions together
-can significantly reduce the number of instrumented instructions
-which have also a positive effect on the portion of code possibly
-removed by slicing before the reachability analysis.
+Inserting fewer calls to \texttt{\_\_INSTR\_remember} function has a positive
+effect on the speed of reachability analysis (or running the program) since the
+lists used to keep records are shorter. All the described extensions together
+can significantly reduce the number of instrumented instructions which have
+also a positive effect on the portion of code possibly removed by slicing
+before the reachability analysis in \symbiotic.
 
 
 
