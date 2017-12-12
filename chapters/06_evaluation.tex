@@ -1,5 +1,5 @@
-In this chapter, we evaluate the instrumentation for checking memory safety
-that was employed in \symbiotic on benchmarks from SV-COMP 2018.
+In this chapter, we evaluate the instrumentation for checking memory safety.
+We employed the instrumentation in \symbiotic and ran it on benchmarks from SV-COMP 2018.
 
 We used all the benchmarks from the official \emph{MemSafety} category along
 with the benchmarks from the subcategory \emph{TerminCrafted} which was not
@@ -14,31 +14,28 @@ following errors:
 There were 390 benchmarks in total, 140 of them containing some
 memory safety violation, 250 of them safe.
 
-\symbiotic first instruments the program according to one of the configurations
-described in Chapter~\ref{chap:memsafety}. Since the newly inserted code marks
-possible error locations, we reduced the problem to a reachability problem.
-\symbiotic slices the program and then runs symbolic executor \klee that checks
-the reachability of the error locations. If no error location is reachable, it
-answers \emph{true}. If some error location is reachable, it answeres
-\emph{false} and gives information about a type of the error (e.g.  invalid
-dereference or memory leak). If \symbiotic cannot decide the reachability, it
-answers \emph{unknown}. If it runs out of time, i.e.~the given time limit
-was exceeded, the answer is \emph{timeout}. All \emph{true} and \emph{false}
-answers \symbiotic gave were correct.
+\symbiotic answers \emph{true} if no error location is reachable. If some error
+location is reachable, it answeres \emph{false} and gives information about a
+type of the error (e.g.  invalid dereference or memory leak). If \symbiotic
+cannot decide the reachability, it answers \emph{unknown}. If it runs out of
+time, i.e.~the given time limit was exceeded, the answer is \emph{timeout}. All
+\emph{true} and \emph{false} answers \symbiotic gave were correct.
 
-All the following measurements were taken on machines with \textit{Intel(R)
-Core(TM) i7-3770} CPU that run on 3.40GHz frequency and dispose of 8~GB of
-memory. The memory limit was set to 8~GB. We used the utility
-\emph{Benchexec}~\cite{Beyer2015} for reliable measurement of consumed
-resources.
 
 \section{Comparison of Configurations}
 In this section, we compare three configurations introduced in
 Chapter~\ref{chap:memsafety}: the basic approach (one-phase instrumentation
 without any plugins, denoted as \emph{basic}), the enhancement with a pointer
 analysis as a plugin (denoted as \emph{ePTA}) and the staged instrumentation
-(denoted as \emph{staged}). We ran \symbiotic with these configurations on the
-above mentioned benchmarks with the CPU time limit set to 120~s.
+with the constant-time checks (denoted as \emph{staged}).
+
+We ran \symbiotic with these configurations on the above mentioned benchmarks
+with the CPU time limit set to 120~s. All the following measurements were taken
+on machines with \textit{Intel(R)~Core(TM)~i7-3770} CPU that run on 3.40GHz
+frequency and dispose of 8~GB of memory. The memory limit was set to 8~GB. We
+used the utility \emph{Benchexec}~\cite{Beyer2015} for reliable measurement of
+consumed resources.
+
 \begin{table}[t]
 \begin{tabular}{V{2} p{6cm} | C{1.5cm}|  C{1.5cm} | C{1.5cm} V{2}}
  \Xhline{2\arrayrulewidth}
@@ -60,12 +57,12 @@ instrumentation. Size is given by the number of instructions of a program.}
 \end{table}
 
 As for the number of inserted instructions, we present the experimental results
-in Table~\ref{tab:numbers}. The first part of the table shows the total size of
+in Table~\ref{tab:numbers}. The first two rows of the table show the total size of
 the benchmarks expressed with the number of LLVM instructions before and after
-instrumentation for each configuration. In the second part, the cumulative and
-average number of inserted \texttt{call} instructions is counted. Note that the
+instrumentation for each configuration. The other two rows show the cumulative and
+average number of inserted \texttt{call} instructions. Note that the
 total size before instrumentation is 155801 instructions, which is 400
-instruction on average. This means that with the basic approach, the final code
+instructions on average. This means that with the basic approach, the final code
 after instrumentation is of more than double size. Evidently, the number of
 inserted instructions significantly decreases with each enhancement. This is
 also depicted in Figure~\ref{fig:box} that shows the box plot for each
@@ -73,7 +70,7 @@ configuration.
 
 \begin{figure}[h]
   \includegraphics[width=\textwidth]{charts/box.png}
-  \caption{The box plots for each of the three configurations for the memory safety instrumentation.}
+  \caption{The box plots for each of the three configurations for the memory safety instrumentation. The $x$-axis describes the ratio of the number of instructions after instrumentation to the number of instructions before instrumentation.}
   \label{fig:box}
 \end{figure}
 
@@ -123,7 +120,7 @@ insignificantly as showed in Figure~\ref{fig:times_chart}.
 \section{SV-COMP 2018}
 
 \symbiotic proved its abilities in SV-COMP~2018, where it won the first place
-in the official \emph{MemSafety} categories. There were 326 benchmarks in
+in the official \emph{MemSafety} category. There were 326 benchmarks in
 total\footnote{\url{https://sv-comp.sosy-lab.org/2018/benchmarks.php}}.
 
 In Table~\ref{tab:results} we present the results of \symbiotic,
